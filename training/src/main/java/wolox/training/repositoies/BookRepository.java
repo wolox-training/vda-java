@@ -6,4 +6,5 @@ import wolox.training.models.Book;
 
 public interface BookRepository extends CrudRepository<Book, Long> {
     Book findFirstByAuthor(String author);
+    List<Book> findByTitle(String title);
 }
