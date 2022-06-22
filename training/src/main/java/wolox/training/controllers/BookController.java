@@ -26,6 +26,14 @@ public class BookController {
     @Autowired
     private BookRepository bookRepository;
 
+    /**
+     *
+     * This method permits greeting to a user for test
+     *
+     * @param name :Name of user
+     * @param model : {@link Model} Object
+     * @return Model with attributeName to will show
+     */
     @GetMapping("/greeting")
     public String greeting(@RequestParam(name = "name", required = false, defaultValue = "World") String name,
             Model model) {
@@ -33,20 +41,59 @@ public class BookController {
         return "greeting";
     }
 
+    /**
+     *
+     * This method returns all Book in repository
+     *
+     * @return {@link List} with all instances of {@link Book}
+     * @throws BookNotFoundException :trows exception if the book was not found
+     */
     @GetMapping
-    public Iterable findAll() {
-        return bookRepository.findAll();
+    public List<Book> findAll() {
+        List<Book> books = (List<Book>) bookRepository.findAll();
+        if(books.isEmpty()){
+            throw new BookNotFoundException();
+        }else {
+            return books;
+        }
     }
-    @GetMapping("/title/{bookTitle}")
-    public List findByTitle(@PathVariable String bookTitle) {
 
-        return bookRepository.findByTitle(bookTitle);
+    /**
+     *
+     * This method returns a list with books filtered for name
+     *
+     * @param bookTitle :Title to search
+     * @return {@link List} of {@link Book} filtered for title
+     * @throws BookNotFoundException: trows exception if the book was not found
+     *
+     */
+    @GetMapping("/title/{bookTitle}")
+    @ResponseStatus(HttpStatus.OK)
+    public List<Book> findByTitle(@PathVariable String bookTitle) {
+        List<Book> books = bookRepository.findByTitle(bookTitle);
+        if (books.isEmpty()){
+            throw new BookNotFoundException();
+        }else{
+            return books;
+        }
     }
+
+    /**
+     *
+     * This method returns Book instance filtered for ID
+     *
+     * @param id :id of book to search
+     * @return {@link Book}
+     * @throws BookNotFoundException : trows exception if the book was not found
+     *
+     */
     @GetMapping("/{id}")
-    public Book findOne(@PathVariable Long id) {
+    @ResponseStatus(HttpStatus.OK)
+    public Book findById(@PathVariable Long id) {
         return bookRepository.findById(id)
                 .orElseThrow(BookNotFoundException::new);
     }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Book create(@RequestBody Book book) {
