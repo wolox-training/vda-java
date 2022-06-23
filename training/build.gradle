@@ -19,6 +19,11 @@ dependencies {
     implementation 'org.postgresql:postgresql:42.3.6'
     implementation 'org.springframework.boot:spring-boot-devtools:2.7.0'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:2.7.0'
+    implementation 'org.springframework.plugin:spring-plugin-core:2.0.0.RELEASE'
+    implementation 'io.springfox:springfox-boot-starter:3.0.0'
+    implementation "io.springfox:springfox-bean-validators:3.0.0"
+    implementation 'io.springfox:springfox-swagger-ui:3.0.0'
+    implementation 'io.springfox:springfox-swagger2:3.0.0'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 

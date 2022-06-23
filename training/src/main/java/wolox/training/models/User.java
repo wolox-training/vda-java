@@ -1,5 +1,7 @@
 package wolox.training.models;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,6 +16,7 @@ import javax.persistence.OneToMany;
 import wolox.training.exceptions.BookAlreadyOwnedException;
 
 @Entity (name = "users")
+@ApiModel(description = "Users from LibraryAPI")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -30,6 +33,7 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @Column(nullable = false)
+    @ApiModelProperty(notes = "User Book Collection")
     List<Book> books = new ArrayList<>();
 
     public long getId() {
