@@ -18,7 +18,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                     })
     protected ResponseEntity<Object> handleNotFound(
             Exception ex, WebRequest request) {
-        return handleExceptionInternal(ex, "Not found Object",
+        return handleExceptionInternal(ex, "****Library APP**** Not found Object",
                 new HttpHeaders(), HttpStatus.NOT_FOUND, request);
     }
 

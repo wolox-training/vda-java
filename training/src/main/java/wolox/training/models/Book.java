@@ -1,5 +1,6 @@
 package wolox.training.models;
 
+import com.google.common.base.Preconditions;
 import java.io.Serializable;
 import java.util.Objects;
 import javax.persistence.Column;
@@ -12,8 +13,10 @@ import javax.persistence.ManyToOne;
 
 @Entity
 public class Book implements Serializable {
+
+    static final String OBJECT_NULL_MESSAGE = "Please check Object supplied it's null %s ! ";
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private long id;
     private String  genre;
     @Column(nullable = false)
@@ -38,6 +41,7 @@ public class Book implements Serializable {
     private User user;
 
     public Book() {
+        //constructor necessary for JPA library
     }
 
     public long getId() {
@@ -53,6 +57,8 @@ public class Book implements Serializable {
     }
 
     public void setGenre(String genre) {
+        String nameParameter="genre";
+        Preconditions.checkNotNull(genre,OBJECT_NULL_MESSAGE,nameParameter);
         this.genre = genre;
     }
 
@@ -61,6 +67,8 @@ public class Book implements Serializable {
     }
 
     public void setAuthor(String author) {
+        String nameParameter="author";
+        Preconditions.checkNotNull(author,OBJECT_NULL_MESSAGE,nameParameter);
         this.author = author;
     }
 
@@ -69,6 +77,8 @@ public class Book implements Serializable {
     }
 
     public void setImage(String image) {
+        String nameParameter="image";
+        Preconditions.checkNotNull(image,OBJECT_NULL_MESSAGE,nameParameter);
         this.image = image;
     }
 
@@ -77,6 +87,8 @@ public class Book implements Serializable {
     }
 
     public void setTitle(String title) {
+        String nameParameter="title";
+        Preconditions.checkNotNull(title,OBJECT_NULL_MESSAGE,nameParameter);
         this.title = title;
     }
 
@@ -85,6 +97,8 @@ public class Book implements Serializable {
     }
 
     public void setSubtitle(String subtitle) {
+        String nameParameter="subtitle";
+        Preconditions.checkNotNull(subtitle,OBJECT_NULL_MESSAGE,nameParameter);
         this.subtitle = subtitle;
     }
 
@@ -93,6 +107,8 @@ public class Book implements Serializable {
     }
 
     public void setPublisher(String publisher) {
+        String nameParameter="publisher";
+        Preconditions.checkNotNull(publisher,OBJECT_NULL_MESSAGE,nameParameter);
         this.publisher = publisher;
     }
 
@@ -101,6 +117,8 @@ public class Book implements Serializable {
     }
 
     public void setYear(String year) {
+        String nameParameter="year";
+        Preconditions.checkNotNull(year,OBJECT_NULL_MESSAGE,nameParameter);
         this.year = year;
     }
 
@@ -117,6 +135,8 @@ public class Book implements Serializable {
     }
 
     public void setIsbn(String isbn) {
+        String nameParameter="isbn";
+        Preconditions.checkNotNull(isbn,OBJECT_NULL_MESSAGE,nameParameter);
         this.isbn = isbn;
     }
 
@@ -125,6 +145,8 @@ public class Book implements Serializable {
     }
 
     public void setUser(User user) {
+        String nameParameter="user";
+        Preconditions.checkNotNull(user,OBJECT_NULL_MESSAGE,nameParameter);
         this.user = user;
     }
     @Override
