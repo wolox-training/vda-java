@@ -16,7 +16,7 @@ public class Book implements Serializable {
 
     static final String OBJECT_NULL_MESSAGE = "Please check Object supplied it's null %s ! ";
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private long id;
     private String  genre;
     @Column(nullable = false)

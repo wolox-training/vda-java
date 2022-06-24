@@ -22,7 +22,7 @@ import wolox.training.exceptions.BookAlreadyOwnedException;
 public class User implements Serializable {
     static final String OBJECT_NULL_MESSAGE = "Please check Object supplied it's null %s ! ";
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private long id;
 
     @Column(nullable = false)
