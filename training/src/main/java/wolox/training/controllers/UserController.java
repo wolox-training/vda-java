@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -128,7 +127,7 @@ public class UserController {
             @ApiParam(value = "User Id to delete", required = true)
             @PathVariable Long id) {
         userRepository.findById(id)
-                .orElseThrow(()-> new BookNotFoundException("User Id:"+id+" not found"));
+                .orElseThrow(()-> new UserIdMismatchException("User Id:"+id+" not found"));
         userRepository.deleteById(id);
     }
 
@@ -141,14 +140,13 @@ public class UserController {
      * @throws BookNotFoundException : throw this exception if book not found
      * @throws UserNotFoundException: throw this exception if User not found
      */
-
     @ApiOperation(value = "Add Book to User library collection", response = User.class)
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "User Collection updated Successfully"),
             @ApiResponse(code = 400, message = "User not found"),
             @ApiResponse(code = 400, message = "Book not found"),
             })
-    @PatchMapping(path = "/{userID}/books/add",
+    @PostMapping(path = "/{userId}/books",
             consumes = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.OK)
     public void addBookinUserCollection(
@@ -159,7 +157,7 @@ public class UserController {
         Book finalBook = bookRepository.findById(book.getId())
                 .orElseThrow(()->new BookNotFoundException("Book Id:"+ book.getId()+" not found"));
         userRepository.findById(userId)
-                .orElseThrow(()-> new BookNotFoundException("User Id:"+userId+" not found"))
+                .orElseThrow(()-> new UserNotFoundException("User Id:"+userId+" not found"))
                 .addBookToCollection(finalBook);
     }
 
@@ -179,18 +177,19 @@ public class UserController {
             @ApiResponse(code = 400, message = "User not found"),
             @ApiResponse(code = 400, message = "Book not found"),
     })
-    @PatchMapping(path = "/{userID}/books/delete",
+    @DeleteMapping(path = "/{userId}/books",
             consumes = {MediaType.APPLICATION_JSON_VALUE})
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeBookInUserCollection(
             @ApiParam(value = "New Book Entity", required = true)
             @RequestBody Book book,
             @ApiParam(value = "User id to update", required = true)
             @PathVariable Long userId){
+
         Book finalBook = bookRepository.findById(book.getId())
                 .orElseThrow(()->new BookNotFoundException("Book Id:"+ book.getId()+" not found"));
         userRepository.findById(userId)
-                .orElseThrow(()-> new BookNotFoundException("User Id:"+userId+" not found"))
+                .orElseThrow(()-> new UserNotFoundException("User Id:"+userId+" not found"))
                 .removeBookToCollection(finalBook);
     }
 }
