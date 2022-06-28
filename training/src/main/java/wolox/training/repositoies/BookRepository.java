@@ -5,5 +5,5 @@ import org.springframework.data.repository.CrudRepository;
 import wolox.training.models.Book;
 
 public interface BookRepository extends CrudRepository<Book, Long> {
-    Book findFirstByAuthor(String author);
+    Optional<Book> findFirstByAuthor(String author);
 }
