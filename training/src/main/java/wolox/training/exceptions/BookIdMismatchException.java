@@ -9,4 +9,7 @@ public class BookIdMismatchException extends RuntimeException {
     public BookIdMismatchException() {
         super("The book's id does not correspond to the data to be updated");
     }
+    public BookIdMismatchException(String message) {
+        super(message);
+    }
 }

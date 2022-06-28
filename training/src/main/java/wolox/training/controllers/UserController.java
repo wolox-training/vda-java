@@ -6,7 +6,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -83,7 +82,7 @@ public class UserController {
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         userRepository.findById(id)
-                .orElseThrow(()-> new BookNotFoundException("User Id:"+id+" not found"));
+                .orElseThrow(()-> new UserIdMismatchException("User Id:"+id+" not found"));
         userRepository.deleteById(id);
     }
 
