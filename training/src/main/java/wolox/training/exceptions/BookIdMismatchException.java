@@ -7,19 +7,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class BookIdMismatchException extends RuntimeException {
 
     public BookIdMismatchException() {
-
-        super();
-    }
-    public BookIdMismatchException(String message, Throwable cause) {
-
-        super(message, cause);
-    }
-    public BookIdMismatchException(String message) {
-
-        super(message);
-    }
-    public BookIdMismatchException(Throwable cause) {
-
-        super(cause);
+        super("The book's id does not correspond to the data to be updated");
     }
 }
