@@ -1,6 +1,7 @@
 package wolox.training.controllers;
 
 import java.util.List;
+import javax.websocket.server.PathParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -34,12 +35,11 @@ public class BookController {
     }
 
     @GetMapping
-    public Iterable findAll() {
+    public Iterable<Book> findAll() {
         return bookRepository.findAll();
     }
-    @GetMapping("/title/{bookTitle}")
-    public List findByTitle(@PathVariable String bookTitle) {
-
+    @GetMapping("/title")
+    public List<Book> findByTitle(@RequestParam() String bookTitle) {
         return bookRepository.findByTitle(bookTitle);
     }
     @GetMapping("/{id}")
