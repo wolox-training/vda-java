@@ -114,7 +114,7 @@ public class UserController {
      * @throws BookNotFoundException : throw this exception if book not found
      * @throws UserNotFoundException: throw this exception if User not found
      */
-    @PatchMapping(path = "/{userID}/books/delete")
+    @DeleteMapping(path = "/{userId}/books")
     public void removeBookinUserCollection(@RequestBody Book book, @PathVariable Long userId){
         Book finalBook = bookRepository.findById(book.getId())
                 .orElseThrow(()->new BookNotFoundException("Book Id:"+ book.getId()+" not found"));
