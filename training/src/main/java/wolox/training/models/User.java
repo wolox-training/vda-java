@@ -23,27 +23,28 @@ public class User implements Serializable {
     static final String OBJECT_NULL_MESSAGE = "Please check Object supplied it's null %s ! ";
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @ApiModelProperty(notes = "user Id", required = false)
     private long id;
 
     @Column(nullable = false)
+    @ApiModelProperty(notes = "username", required = true)
     private String username;
 
     @Column(nullable = false)
+    @ApiModelProperty(notes = "name", required = true)
     private String name;
 
     @Column(nullable = false)
+    @ApiModelProperty(notes = "birthday", required = true)
     private LocalDate birthdate;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.MERGE)
     @Column(nullable = false)
-    @ApiModelProperty(notes = "User Book Collection")
+    @ApiModelProperty(notes = "User Book Collection", required = false)
     private List<Book> books = new ArrayList<>();
-
     public long getId() {
         return id;
     }
-
-    public void setId(long id) {this.id = id; }
 
     public String getUsername() {
         return username;

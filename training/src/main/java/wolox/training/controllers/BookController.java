@@ -52,6 +52,7 @@ public class BookController {
      * @throws BookNotFoundException :trows exception if the book was not found
      */
     @GetMapping
+    @ResponseStatus(HttpStatus.OK)
     public List<Book> findAll() {
         List<Book> books = (List<Book>) bookRepository.findAll();
         if(books.isEmpty()){
@@ -70,9 +71,9 @@ public class BookController {
      * @throws BookNotFoundException: trows exception if the book was not found
      *
      */
-    @GetMapping("/title/{bookTitle}")
+    @GetMapping("/title")
     @ResponseStatus(HttpStatus.OK)
-    public List<Book> findByTitle(@PathVariable String bookTitle) {
+    public List<Book> findByTitle(@RequestParam() String bookTitle) {
         List<Book> books = bookRepository.findByTitle(bookTitle);
         if (books.isEmpty()){
             throw new BookNotFoundException();
@@ -104,7 +105,7 @@ public class BookController {
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         bookRepository.findById(id)
                 .orElseThrow(()-> new BookNotFoundException("Book Id:"+id+" not found"));
