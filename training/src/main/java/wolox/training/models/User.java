@@ -28,7 +28,7 @@ public class User {
     @Column(nullable = false)
     private LocalDate birthdate;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.MERGE)
     @Column(nullable = false)
     List<Book> books = new ArrayList<>();
 
@@ -36,9 +36,6 @@ public class User {
         return id;
     }
 
-    public void setId(long id) {
-        this.id = id;
-    }
 
     public String getUsername() {
         return username;
