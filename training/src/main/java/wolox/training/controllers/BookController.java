@@ -61,6 +61,7 @@ public class BookController {
             return books;
         }
     }
+<<<<<<< HEAD
 
     /**
      *
@@ -71,10 +72,10 @@ public class BookController {
      * @throws BookNotFoundException: trows exception if the book was not found
      *
      */
-    @GetMapping("/title")
+    @GetMapping(params = "title")
     @ResponseStatus(HttpStatus.OK)
-    public List<Book> findByTitle(@RequestParam() String bookTitle) {
-        List<Book> books = bookRepository.findByTitle(bookTitle);
+    public List<Book> findByTitle(@RequestParam String title) {
+        List<Book> books = bookRepository.findByTitle(title);
         if (books.isEmpty()){
             throw new BookNotFoundException();
         }else{
