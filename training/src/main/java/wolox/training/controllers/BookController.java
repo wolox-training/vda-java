@@ -39,7 +39,7 @@ public class BookController {
         return bookRepository.findAll();
     }
     @GetMapping
-    public List<Book> findByTitle(@RequestParam() String bookTitle) {
+    public List<Book> findByTitle(@RequestParam String title) {
         return bookRepository.findByTitle(bookTitle);
     }
     @GetMapping("/{id}")
