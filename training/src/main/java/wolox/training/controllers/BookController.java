@@ -38,9 +38,9 @@ public class BookController {
     public Iterable<Book> findAll() {
         return bookRepository.findAll();
     }
-    @GetMapping
+    @GetMapping(params = "title")
     public List<Book> findByTitle(@RequestParam String title) {
-        return bookRepository.findByTitle(bookTitle);
+        return bookRepository.findByTitle(title);
     }
     @GetMapping("/{id}")
     public Book findOne(@PathVariable Long id) {
