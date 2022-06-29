@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -15,16 +16,21 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import wolox.training.exceptions.BookAlreadyOwnedException;
+import wolox.training.exceptions.BookNotFoundException;
 
-@Entity (name = "users")
+@Entity(name = "users")
 @ApiModel(description = "Users from LibraryAPI")
 public class User implements Serializable {
+    
     static final String OBJECT_NULL_MESSAGE = "Please check Object supplied it's null %s ! ";
+    private static final long serialVersionUID = -8348234395026986132L;
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    @ApiModelProperty(notes = "user Id", required = false)
+    @ApiModelProperty(notes = "user Id")
     private long id;
 
     @Column(nullable = false)
@@ -39,9 +45,19 @@ public class User implements Serializable {
     @ApiModelProperty(notes = "birthday", required = true)
     private LocalDate birthdate;
 
-    @OneToMany(fetch = FetchType.LAZY,mappedBy = "user", cascade = CascadeType.MERGE)
+    @ManyToMany(fetch = FetchType.LAZY,
+            cascade = {
+                    CascadeType.PERSIST,
+                    CascadeType.MERGE
+            })
+
+    @JoinTable(name = "user_book",
+            joinColumns=@JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "book_id")
+    )
+
     @Column(nullable = false)
-    @ApiModelProperty(notes = "User Book Collection", required = false)
+    @ApiModelProperty(notes = "User Book Collection")
     private List<Book> books = new ArrayList<>();
     public long getId() {
         return id;
@@ -94,13 +110,38 @@ public class User implements Serializable {
             throw new BookAlreadyOwnedException();
         }else{
             this.books.add(book);
+            book.getUsers().add(this);
         }
     }
 
     public void removeBookToCollection(Book book){
         String nameParameter="book";
         Preconditions.checkNotNull(book,OBJECT_NULL_MESSAGE,nameParameter);
-        this.books.remove(book);
+        if(this.books.contains(book)){
+            this.books.remove(book);
+            book.getUsers().remove(this);
+        }else {
+            throw new BookNotFoundException();
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId());
+    }
+    @Override
+    public boolean equals (Object obj){
+        User user =(User) obj;
+        if (this == user){
+            return true;
+        }
+        if(user == null) {
+            return false;
+        }
+        if(this.getClass() != user.getClass()){
+            return false;
+        }
+        return Objects.equals(getId(), user.getId());
     }
 
 }

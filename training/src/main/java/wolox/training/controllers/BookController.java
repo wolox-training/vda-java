@@ -61,13 +61,11 @@ public class BookController {
             return books;
         }
     }
-<<<<<<< HEAD
-
     /**
      *
      * This method returns a list with books filtered for name
      *
-     * @param bookTitle :Title to search
+     * @param title :Book's Title to search
      * @return {@link List} of {@link Book} filtered for title
      * @throws BookNotFoundException: trows exception if the book was not found
      *
