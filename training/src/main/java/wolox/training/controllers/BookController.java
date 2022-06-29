@@ -38,7 +38,7 @@ public class BookController {
     public Iterable<Book> findAll() {
         return bookRepository.findAll();
     }
-    @GetMapping("/title")
+    @GetMapping
     public List<Book> findByTitle(@RequestParam() String bookTitle) {
         return bookRepository.findByTitle(bookTitle);
     }
