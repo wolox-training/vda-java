@@ -122,12 +122,12 @@ public class UserController {
             @ApiResponse(code = 400, message = "User not found"),
     })
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
             @ApiParam(value = "User Id to delete", required = true)
             @PathVariable Long id) {
         userRepository.findById(id)
-                .orElseThrow(()-> new UserIdMismatchException("User Id:"+id+" not found"));
+                .orElseThrow(()-> new UserNotFoundException("User Id:"+id+" not found"));
         userRepository.deleteById(id);
     }
 
@@ -149,7 +149,7 @@ public class UserController {
     @PostMapping(path = "/{userId}/books",
             consumes = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.OK)
-    public void addBookinUserCollection(
+    public User addBookinUserCollection(
             @ApiParam(value = "New Book Entity", required = true)
             @RequestBody Book book,
             @ApiParam(value = "User id to update", required = true)
@@ -159,6 +159,8 @@ public class UserController {
         userRepository.findById(userId)
                 .orElseThrow(()-> new UserNotFoundException("User Id:"+userId+" not found"))
                 .addBookToCollection(finalBook);
+        return userRepository.save(userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new));
     }
 
     /**
@@ -180,7 +182,7 @@ public class UserController {
     @DeleteMapping(path = "/{userId}/books",
             consumes = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeBookInUserCollection(
+    public User removeBookInUserCollection(
             @ApiParam(value = "New Book Entity", required = true)
             @RequestBody Book book,
             @ApiParam(value = "User id to update", required = true)
@@ -191,5 +193,7 @@ public class UserController {
         userRepository.findById(userId)
                 .orElseThrow(()-> new UserNotFoundException("User Id:"+userId+" not found"))
                 .removeBookToCollection(finalBook);
+        return userRepository.save(userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new));
     }
 }

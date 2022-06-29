@@ -11,6 +11,7 @@ import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -38,7 +39,7 @@ public class User implements Serializable {
     @ApiModelProperty(notes = "birthday", required = true)
     private LocalDate birthdate;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.MERGE)
+    @OneToMany(fetch = FetchType.LAZY,mappedBy = "user", cascade = CascadeType.MERGE)
     @Column(nullable = false)
     @ApiModelProperty(notes = "User Book Collection", required = false)
     private List<Book> books = new ArrayList<>();

@@ -104,23 +104,23 @@ public class BookController {
         return bookRepository.save(book);
     }
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        bookRepository.findById(id)
-                .orElseThrow(()-> new BookNotFoundException("Book Id:"+id+" not found"));
-        bookRepository.deleteById(id);
-    }
-
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}",
+            produces = "application/json")
     @ResponseStatus(HttpStatus.OK)
-    public Book updateBook(@RequestBody Book book, @PathVariable Long id) {
+    public Book updateBook(@PathVariable Long id, @RequestBody Book book) {
         if (book.getId() != id) {
             throw new BookIdMismatchException("Book id: "+book.getId()+" don't match with Id:"+id);
         }
         bookRepository.findById(id)
                 .orElseThrow(() -> new BookNotFoundException("Book Id:" + id + " not found"));
         return bookRepository.save(book);
+    }
+    @DeleteMapping(path = "/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        bookRepository.findById(id)
+                .orElseThrow(()-> new BookNotFoundException("Book Id:"+id+" not found"));
+        bookRepository.deleteById(id);
     }
 
 }
