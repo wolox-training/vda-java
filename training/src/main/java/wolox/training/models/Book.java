@@ -20,6 +20,7 @@ public class Book implements Serializable {
 
     static final String OBJECT_NULL_MESSAGE = "Please check Object supplied it's null %s ! ";
     private static final long serialVersionUID = -3673586493636539763L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private long id;
@@ -54,7 +55,6 @@ public class Book implements Serializable {
     public long getId() {
         return id;
     }
-
 
     public String getGenre() {
         return genre;
