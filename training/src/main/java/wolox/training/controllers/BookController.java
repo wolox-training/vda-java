@@ -1,7 +1,6 @@
 package wolox.training.controllers;
 
 import java.util.List;
-import javax.websocket.server.PathParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -50,8 +49,14 @@ public class BookController {
      * @throws BookNotFoundException :trows exception if the book was not found
      */
     @GetMapping
-    public Iterable<Book> findAll() {
-        return bookRepository.findAll();
+    @ResponseStatus(HttpStatus.OK)
+    public List<Book> findAll() {
+        List<Book> books = (List<Book>) bookRepository.findAll();
+        if(books.isEmpty()){
+            throw new BookNotFoundException();
+        }else {
+            return books;
+        }
     }
 
     /**
@@ -64,8 +69,14 @@ public class BookController {
      *
      */
     @GetMapping(params = "title")
+    @ResponseStatus(HttpStatus.OK)
     public List<Book> findByTitle(@RequestParam String title) {
-        return bookRepository.findByTitle(title);
+        List<Book> books = bookRepository.findByTitle(bookTitle);
+        if (books.isEmpty()){
+            throw new BookNotFoundException();
+        }else{
+            return books;
+        }
     }
 
     /**
@@ -99,6 +110,7 @@ public class BookController {
     }
 
     @PutMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
     public Book updateBook(@RequestBody Book book, @PathVariable Long id) {
         if (book.getId() != id) {
             throw new BookIdMismatchException();

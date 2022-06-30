@@ -1,13 +1,17 @@
 package wolox.training.models;
 
+import java.io.Serializable;
+import java.util.Objects;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 
 @Entity
-public class Book {
+public class Book implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private long id;
@@ -28,6 +32,10 @@ public class Book {
     private int pages;
     @Column(nullable = false)
     private String isbn;
+
+    @ManyToOne()
+    @JoinColumn(name = "fk_user_id")
+    private User user;
 
     public Book() {
     }
@@ -107,5 +115,31 @@ public class Book {
 
     public void setIsbn(String isbn) {
         this.isbn = isbn;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId());
+    }
+    @Override
+    public boolean equals (Object obj){
+        Book book =(Book) obj;
+        if (this == book){
+            return true;
+        }
+        if(book == null) {
+            return false;
+        }
+        if(this.getClass() != book.getClass()){
+            return false;
+        }
+        return Objects.equals(getId(), book.getId());
     }
 }
