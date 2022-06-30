@@ -137,7 +137,7 @@ public class Book implements Serializable {
     }
 
     public void setPages(int pages) {
-        Preconditions.checkArgument(pages<0,
+        Preconditions.checkArgument(pages>0,
                 "The pages param must be mayor to 0");
         this.pages = pages;
     }
