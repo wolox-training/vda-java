@@ -63,14 +63,14 @@ public class BookController {
      *
      * This method returns a list with books filtered for name
      *
-     * @param bookTitle :Title to search
+     * @param title : title to search
      * @return {@link List} of {@link Book} filtered for title
      * @throws BookNotFoundException: trows exception if the book was not found
      *
      */
-    @GetMapping("/title")
+    @GetMapping(params = "title")
     @ResponseStatus(HttpStatus.OK)
-    public List<Book> findByTitle(@RequestParam() String bookTitle) {
+    public List<Book> findByTitle(@RequestParam String title) {
         List<Book> books = bookRepository.findByTitle(bookTitle);
         if (books.isEmpty()){
             throw new BookNotFoundException();

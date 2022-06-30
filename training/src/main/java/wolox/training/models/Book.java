@@ -13,7 +13,7 @@ import javax.persistence.ManyToOne;
 @Entity
 public class Book implements Serializable {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private long id;
     private String  genre;
     @Column(nullable = false)
