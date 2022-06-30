@@ -27,6 +27,14 @@ public class BookController {
     @Autowired
     private BookRepository bookRepository;
 
+    /**
+     *
+     * This method permits greeting to a user for test
+     *
+     * @param name :Name of user
+     * @param model : {@link Model} Object
+     * @return Model with attributeName to will show
+     */
     @GetMapping("/greeting")
     public String greeting(@RequestParam(name = "name", required = false, defaultValue = "World") String name,
             Model model) {
@@ -34,19 +42,48 @@ public class BookController {
         return "greeting";
     }
 
+    /**
+     *
+     * This method returns all Book in repository
+     *
+     * @return {@link List} with all instances of {@link Book}
+     * @throws BookNotFoundException :trows exception if the book was not found
+     */
     @GetMapping
     public Iterable<Book> findAll() {
         return bookRepository.findAll();
     }
+
+    /**
+     *
+     * This method returns a list with books filtered for name
+     *
+     * @param title : title to search
+     * @return {@link List} of {@link Book} filtered for title
+     * @throws BookNotFoundException: trows exception if the book was not found
+     *
+     */
     @GetMapping(params = "title")
     public List<Book> findByTitle(@RequestParam String title) {
         return bookRepository.findByTitle(title);
     }
+
+    /**
+     *
+     * This method returns Book instance filtered for ID
+     *
+     * @param id :id of book to search
+     * @return {@link Book}
+     * @throws BookNotFoundException : trows exception if the book was not found
+     *
+     */
     @GetMapping("/{id}")
-    public Book findOne(@PathVariable Long id) {
+    @ResponseStatus(HttpStatus.OK)
+    public Book findById(@PathVariable Long id) {
         return bookRepository.findById(id)
                 .orElseThrow(BookNotFoundException::new);
     }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Book create(@RequestBody Book book) {
