@@ -92,7 +92,7 @@ public class BookController {
     @ResponseStatus(HttpStatus.OK)
     public Book findById(@PathVariable Long id) {
         return bookRepository.findById(id)
-                .orElseThrow(BookNotFoundException::new);
+                .orElseThrow(() -> new BookNotFoundException("Book Id:" + id + " not found"));
     }
 
     @PostMapping
@@ -105,7 +105,7 @@ public class BookController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         bookRepository.findById(id)
-                .orElseThrow(BookNotFoundException::new);
+                .orElseThrow(()-> new BookNotFoundException("Book Id:"+id+" not found"));
         bookRepository.deleteById(id);
     }
 
@@ -113,12 +113,11 @@ public class BookController {
     @ResponseStatus(HttpStatus.OK)
     public Book updateBook(@RequestBody Book book, @PathVariable Long id) {
         if (book.getId() != id) {
-            throw new BookIdMismatchException();
+            throw new BookIdMismatchException("Book id: "+book.getId()+" don't match with Id:"+id);
         }
         bookRepository.findById(id)
-                .orElseThrow(BookNotFoundException::new);
+                .orElseThrow(() -> new BookNotFoundException("Book Id:" + id + " not found"));
         return bookRepository.save(book);
     }
-
 
 }
