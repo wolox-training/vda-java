@@ -1,7 +1,9 @@
 package wolox.training.models;
 
+import com.google.common.base.Preconditions;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,7 +19,8 @@ import wolox.training.exceptions.BookAlreadyOwnedException;
 
 @Entity (name = "users")
 @ApiModel(description = "Users from LibraryAPI")
-public class User {
+public class User implements Serializable {
+    static final String OBJECT_NULL_MESSAGE = "Please check Object supplied it's null %s ! ";
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @ApiModelProperty(notes = "user Id", required = false)
@@ -38,18 +41,18 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.MERGE)
     @Column(nullable = false)
     @ApiModelProperty(notes = "User Book Collection", required = false)
-    List<Book> books = new ArrayList<>();
-
+    private List<Book> books = new ArrayList<>();
     public long getId() {
         return id;
     }
-
 
     public String getUsername() {
         return username;
     }
 
     public void setUsername(String username) {
+        String nameParameter="username";
+        Preconditions.checkNotNull(username,OBJECT_NULL_MESSAGE,nameParameter);
         this.username = username;
     }
 
@@ -58,6 +61,8 @@ public class User {
     }
 
     public void setName(String name) {
+        String nameParameter="name";
+        Preconditions.checkNotNull(name,OBJECT_NULL_MESSAGE,nameParameter);
         this.name = name;
     }
 
@@ -66,6 +71,8 @@ public class User {
     }
 
     public void setBirthdate(LocalDate birthdate) {
+        String nameParameter="birthdate";
+        Preconditions.checkNotNull(birthdate,OBJECT_NULL_MESSAGE,nameParameter);
         this.birthdate = birthdate;
     }
 
@@ -74,10 +81,14 @@ public class User {
     }
 
     public void setBooks(List<Book> books) {
+        String nameParameter="books";
+        Preconditions.checkNotNull(books,OBJECT_NULL_MESSAGE,nameParameter);
         this.books = books;
     }
 
     public void addBookToCollection(Book book){
+        String nameParameter="book";
+        Preconditions.checkNotNull(book,OBJECT_NULL_MESSAGE,nameParameter);
         if(this.books.contains(book)){
             throw new BookAlreadyOwnedException();
         }else{
@@ -86,6 +97,8 @@ public class User {
     }
 
     public void removeBookToCollection(Book book){
+        String nameParameter="book";
+        Preconditions.checkNotNull(book,OBJECT_NULL_MESSAGE,nameParameter);
         this.books.remove(book);
     }
 

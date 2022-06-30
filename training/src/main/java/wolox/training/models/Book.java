@@ -1,5 +1,8 @@
 package wolox.training.models;
 
+import com.google.common.base.Preconditions;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
 import java.util.Objects;
 import javax.persistence.Column;
@@ -11,25 +14,38 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 @Entity
+@ApiModel(description = "Book from LibraryAPI")
 public class Book implements Serializable {
+
+    static final String OBJECT_NULL_MESSAGE = "Please check Object supplied it's null %s ! ";
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @ApiModelProperty(notes = "book Id")
     private long id;
+    @ApiModelProperty(notes = "genre", required = true)
     private String  genre;
+    @ApiModelProperty(notes = "author", required = true)
     @Column(nullable = false)
     private String  author;
+    @ApiModelProperty(notes = "image", required = true)
     @Column(nullable = false)
     private String  image;
+    @ApiModelProperty(notes = "title", required = true)
     @Column(nullable = false)
     private String  title;
+    @ApiModelProperty(notes = "subtitle", required = false)
     @Column(nullable = false)
     private String  subtitle;
+    @ApiModelProperty(notes = "publisher", required = true)
     @Column(nullable = false)
     private String  publisher;
+    @ApiModelProperty(notes = "year", required = true)
     @Column(nullable = false)
     private String  year;
+    @ApiModelProperty(notes = "pages", required = true)
     @Column(nullable = false)
     private int pages;
+    @ApiModelProperty(notes = "isbn", required = true)
     @Column(nullable = false)
     private String isbn;
 
@@ -38,6 +54,7 @@ public class Book implements Serializable {
     private User user;
 
     public Book() {
+        //constructor necessary for JPA library
     }
 
     public long getId() {
@@ -50,6 +67,8 @@ public class Book implements Serializable {
     }
 
     public void setGenre(String genre) {
+        String nameParameter="genre";
+        Preconditions.checkNotNull(genre,OBJECT_NULL_MESSAGE,nameParameter);
         this.genre = genre;
     }
 
@@ -58,6 +77,8 @@ public class Book implements Serializable {
     }
 
     public void setAuthor(String author) {
+        String nameParameter="author";
+        Preconditions.checkNotNull(author,OBJECT_NULL_MESSAGE,nameParameter);
         this.author = author;
     }
 
@@ -66,6 +87,8 @@ public class Book implements Serializable {
     }
 
     public void setImage(String image) {
+        String nameParameter="image";
+        Preconditions.checkNotNull(image,OBJECT_NULL_MESSAGE,nameParameter);
         this.image = image;
     }
 
@@ -74,6 +97,8 @@ public class Book implements Serializable {
     }
 
     public void setTitle(String title) {
+        String nameParameter="title";
+        Preconditions.checkNotNull(title,OBJECT_NULL_MESSAGE,nameParameter);
         this.title = title;
     }
 
@@ -82,6 +107,8 @@ public class Book implements Serializable {
     }
 
     public void setSubtitle(String subtitle) {
+        String nameParameter="subtitle";
+        Preconditions.checkNotNull(subtitle,OBJECT_NULL_MESSAGE,nameParameter);
         this.subtitle = subtitle;
     }
 
@@ -90,6 +117,8 @@ public class Book implements Serializable {
     }
 
     public void setPublisher(String publisher) {
+        String nameParameter="publisher";
+        Preconditions.checkNotNull(publisher,OBJECT_NULL_MESSAGE,nameParameter);
         this.publisher = publisher;
     }
 
@@ -98,6 +127,8 @@ public class Book implements Serializable {
     }
 
     public void setYear(String year) {
+        String nameParameter="year";
+        Preconditions.checkNotNull(year,OBJECT_NULL_MESSAGE,nameParameter);
         this.year = year;
     }
 
@@ -106,6 +137,8 @@ public class Book implements Serializable {
     }
 
     public void setPages(int pages) {
+        Preconditions.checkArgument(pages>0,
+                "The pages param must be mayor to 0");
         this.pages = pages;
     }
 
@@ -114,6 +147,8 @@ public class Book implements Serializable {
     }
 
     public void setIsbn(String isbn) {
+        String nameParameter="isbn";
+        Preconditions.checkNotNull(isbn,OBJECT_NULL_MESSAGE,nameParameter);
         this.isbn = isbn;
     }
 
@@ -122,6 +157,8 @@ public class Book implements Serializable {
     }
 
     public void setUser(User user) {
+        String nameParameter="user";
+        Preconditions.checkNotNull(user,OBJECT_NULL_MESSAGE,nameParameter);
         this.user = user;
     }
     @Override
