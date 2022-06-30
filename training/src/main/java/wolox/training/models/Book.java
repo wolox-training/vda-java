@@ -1,6 +1,8 @@
 package wolox.training.models;
 
 import com.google.common.base.Preconditions;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
 import java.util.Objects;
 import javax.persistence.Column;
@@ -12,27 +14,38 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 @Entity
+@ApiModel(description = "Book from LibraryAPI")
 public class Book implements Serializable {
 
     static final String OBJECT_NULL_MESSAGE = "Please check Object supplied it's null %s ! ";
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @ApiModelProperty(notes = "book Id")
     private long id;
+    @ApiModelProperty(notes = "genre", required = true)
     private String  genre;
+    @ApiModelProperty(notes = "author", required = true)
     @Column(nullable = false)
     private String  author;
+    @ApiModelProperty(notes = "image", required = true)
     @Column(nullable = false)
     private String  image;
+    @ApiModelProperty(notes = "title", required = true)
     @Column(nullable = false)
     private String  title;
+    @ApiModelProperty(notes = "subtitle", required = false)
     @Column(nullable = false)
     private String  subtitle;
+    @ApiModelProperty(notes = "publisher", required = true)
     @Column(nullable = false)
     private String  publisher;
+    @ApiModelProperty(notes = "year", required = true)
     @Column(nullable = false)
     private String  year;
+    @ApiModelProperty(notes = "pages", required = true)
     @Column(nullable = false)
     private int pages;
+    @ApiModelProperty(notes = "isbn", required = true)
     @Column(nullable = false)
     private String isbn;
 
@@ -124,6 +137,8 @@ public class Book implements Serializable {
     }
 
     public void setPages(int pages) {
+        Preconditions.checkArgument(pages<0,
+                "The pages param must be mayor to 0");
         this.pages = pages;
     }
 
