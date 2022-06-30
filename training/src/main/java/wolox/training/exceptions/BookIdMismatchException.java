@@ -3,23 +3,10 @@ package wolox.training.exceptions;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(code = HttpStatus.BAD_REQUEST, reason = "Actor Not Found")
+@ResponseStatus(code = HttpStatus.BAD_REQUEST, reason = "Id mismatch")
 public class BookIdMismatchException extends RuntimeException {
 
     public BookIdMismatchException() {
-
-        super();
-    }
-    public BookIdMismatchException(String message, Throwable cause) {
-
-        super(message, cause);
-    }
-    public BookIdMismatchException(String message) {
-
-        super(message);
-    }
-    public BookIdMismatchException(Throwable cause) {
-
-        super(cause);
+        super("The book's id does not correspond to the data to be updated");
     }
 }

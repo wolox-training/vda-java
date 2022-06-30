@@ -1,6 +1,7 @@
 package wolox.training.controllers;
 
 import java.util.List;
+import javax.websocket.server.PathParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -49,33 +50,22 @@ public class BookController {
      * @throws BookNotFoundException :trows exception if the book was not found
      */
     @GetMapping
-    public List<Book> findAll() {
-        List<Book> books = (List<Book>) bookRepository.findAll();
-        if(books.isEmpty()){
-            throw new BookNotFoundException();
-        }else {
-            return books;
-        }
+    public Iterable<Book> findAll() {
+        return bookRepository.findAll();
     }
 
     /**
      *
      * This method returns a list with books filtered for name
      *
-     * @param bookTitle :Title to search
+     * @param title : title to search
      * @return {@link List} of {@link Book} filtered for title
      * @throws BookNotFoundException: trows exception if the book was not found
      *
      */
-    @GetMapping("/title/{bookTitle}")
-    @ResponseStatus(HttpStatus.OK)
-    public List<Book> findByTitle(@PathVariable String bookTitle) {
-        List<Book> books = bookRepository.findByTitle(bookTitle);
-        if (books.isEmpty()){
-            throw new BookNotFoundException();
-        }else{
-            return books;
-        }
+    @GetMapping(params = "title")
+    public List<Book> findByTitle(@RequestParam String title) {
+        return bookRepository.findByTitle(title);
     }
 
     /**
@@ -101,6 +91,7 @@ public class BookController {
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         bookRepository.findById(id)
                 .orElseThrow(BookNotFoundException::new);
