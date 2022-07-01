@@ -1,23 +1,29 @@
 package wolox.training.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.ManyToMany;
 
-@Entity
+
+@Entity(name = "books")
 @ApiModel(description = "Book from LibraryAPI")
 public class Book implements Serializable {
 
     static final String OBJECT_NULL_MESSAGE = "Please check Object supplied it's null %s ! ";
+    private static final long serialVersionUID = -3673586493636539763L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @ApiModelProperty(notes = "book Id")
@@ -49,9 +55,11 @@ public class Book implements Serializable {
     @Column(nullable = false)
     private String isbn;
 
-    @ManyToOne()
-    @JoinColumn(name = "fk_user_id")
-    private User user;
+    @ManyToMany(fetch = FetchType.LAZY,
+            mappedBy = "books"
+    )
+    @JsonIgnore
+    private List<User> users=new ArrayList<>();
 
     public Book() {
         //constructor necessary for JPA library
@@ -60,7 +68,6 @@ public class Book implements Serializable {
     public long getId() {
         return id;
     }
-
 
     public String getGenre() {
         return genre;
@@ -152,15 +159,16 @@ public class Book implements Serializable {
         this.isbn = isbn;
     }
 
-    public User getUser() {
-        return user;
+    public List<User> getUsers() {
+        return users;
     }
 
-    public void setUser(User user) {
-        String nameParameter="user";
-        Preconditions.checkNotNull(user,OBJECT_NULL_MESSAGE,nameParameter);
-        this.user = user;
+    public void setUsers(List<User> users) {
+        String nameParameter="users";
+        Preconditions.checkNotNull(users,OBJECT_NULL_MESSAGE,nameParameter);
+        this.users = users;
     }
+
     @Override
     public int hashCode() {
         return Objects.hash(getId());
