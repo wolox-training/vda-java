@@ -1,10 +1,14 @@
 package wolox.training.controllers;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -19,7 +23,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultMatcher;
 import wolox.training.models.Book;
 import wolox.training.repositoies.BookRepository;
 
@@ -34,15 +37,17 @@ class BookControllerTest {
     private BookController bookController;
 
     @MockBean
-    private BookRepository mockUserRepository;
+    private BookRepository mockBookRepository;
     private Book oneTestBook;
-    private Book twoTestBook;
     private List<Book> books;
-    private List<Book> booksByTitle;
 
+    private ObjectMapper mapper;
+    BookControllerTest() {
+    }
 
     @BeforeEach
     void setUp() {
+        mapper = new ObjectMapper();
         oneTestBook = new Book();
         oneTestBook.setAuthor("Stephen King");
         oneTestBook.setGenre("Terror");
@@ -53,7 +58,7 @@ class BookControllerTest {
         oneTestBook.setSubtitle("Worst clown ever");
         oneTestBook.setTitle("It");
         oneTestBook.setYear("1986");
-        twoTestBook = new Book();
+        Book twoTestBook = new Book();
         twoTestBook.setAuthor("J.K Rowling");
         twoTestBook.setGenre("Fantasy");
         twoTestBook.setImage("image-harry.png");
@@ -70,51 +75,124 @@ class BookControllerTest {
     }
 
     @Test
-    public void contextLoads() {
-        assertThat(bookController).isNotNull();
-    }
-    @Test
-    @DisplayName("WhenFindAll_thenStatusOk")
-    void whenFindAll_thenStatusOk() throws Exception {
-        Mockito.when(mockUserRepository.findAll()).thenReturn(books);
+    @DisplayName("WhenFindAll_thenReturnListAllBooksWhitStatusOK")
+    void whenFindAll_thenReturnListAllBooksWhitStatusOK () throws Exception {
+        Mockito.when(mockBookRepository.findAll()).thenReturn(books);
         String url =("/api/books");
         mvc.perform(get(url)
                     .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("[{\"id\":0,\"genre\":\"Terror\",\"author\""
+                        + ":\"Stephen King\",\"image\":\"image.jpeg\",\"title\":\"It\",\"subtitle\""
+                        + ":\"Worst clown ever\",\"publisher\":\"Viking Publisher\",\"year\":\""
+                        + "1986\",\"pages\":1253,\"isbn\":\"4578-8665\"},{\"id\":0,\"genre\":\"Fantasy\""
+                        + ",\"author\":\"J.K Rowling\",\"image\":\"image-harry.png\",\"title\":\""
+                        + "Harry Potter and the philosopher's Stone\",\"subtitle\":\"-\",\"publisher\":\""
+                        + "Bloomsbury Publishing\",\"year\":\"1997\",\"pages\":226,\"isbn\":\"9780747532743\"}]"))
+                .andExpect(jsonPath("$",hasSize(2)));
+        Mockito.verify(mockBookRepository).findAll();
     }
 
     @Test
-    @DisplayName("WhenFindByTitle_thenStatusOk")
-    void whenFindByTitle_thenStatusOk() throws Exception {
-        Mockito.when(mockUserRepository.findByTitle("It"))
+    @DisplayName("WhenFindByTitle_thenReturnBooksListStatusOK")
+    void whenFindByTitle_thenReturnBooksListStatusOK() throws Exception {
+        Mockito.when(mockBookRepository.findByTitle("It"))
                 .thenReturn(books.stream()
                         .filter(book -> book.getTitle().equals("It"))
                         .collect(Collectors.toList()));
         String url =("/api/books?title=It");
         mvc.perform(get(url)
                         .contentType(MediaType.ALL_VALUE))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(content().json("[{\"id\":0,\"genre\":\"Terror\","
+                        + "\"author\":\"Stephen King\",\"image\":\"image.jpeg\",\"title\""
+                        + ":\"It\",\"subtitle\":\"Worst clown ever\",\"publisher\":\"Viking Publisher\""
+                        + ",\"year\":\"1986\",\"pages\":1253,\"isbn\":\"4578-8665\"}]"));
+
+        Mockito.verify(mockBookRepository).findByTitle("It");
     }
 
     @Test
-    void findById() throws Exception {
-        Mockito.when(mockUserRepository.findById(0L)).thenReturn(Optional.of(oneTestBook));
+    @DisplayName("WhenFindById_thenStatusOk")
+    void whenFindById_thenReturnBookEntity() throws Exception {
+        Mockito.when(mockBookRepository.findById(0L)).thenReturn(Optional.of(oneTestBook));
         String url =("/api/books/0");
         mvc.perform(get(url)
-                        .contentType(MediaType.ALL_VALUE))
-                .andExpect(status().isOk());
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").value(0L))
+                .andExpect(jsonPath("$.genre").value("Terror"))
+                .andExpect(jsonPath("$.author").value("Stephen King"))
+                .andExpect(jsonPath("$.image").value("image.jpeg"))
+                .andExpect(jsonPath("$.title").value("It"))
+                .andExpect(jsonPath("$.subtitle").value("Worst clown ever"))
+                .andExpect(jsonPath("$.publisher").value("Viking Publisher"))
+                .andExpect(jsonPath("$.year").value("1986"))
+                .andExpect(jsonPath("$.pages").value(1253))
+                .andExpect(jsonPath("$.isbn").value("4578-8665"));
+
+        Mockito.verify(mockBookRepository).findById(0L);
     }
 
     @Test
-    void create() {
+    @DisplayName("WhenCreateBook_thenReturnBookEntityCreatedStatusCreated")
+    void whenCreateBook_thenReturnBookEntityCreatedStatusCreated() throws Exception {
+        Mockito.when(mockBookRepository.save(Mockito.any())).thenReturn(oneTestBook);
+        String url =("/api/books");
+        mvc.perform(post(url)
+                .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(oneTestBook)))
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.genre").value("Terror"))
+                .andExpect(jsonPath("$.author").value("Stephen King"))
+                .andExpect(jsonPath("$.image").value("image.jpeg"))
+                .andExpect(jsonPath("$.title").value("It"))
+                .andExpect(jsonPath("$.subtitle").value("Worst clown ever"))
+                .andExpect(jsonPath("$.publisher").value("Viking Publisher"))
+                .andExpect(jsonPath("$.year").value("1986"))
+                .andExpect(jsonPath("$.pages").value(1253))
+                .andExpect(jsonPath("$.isbn").value("4578-8665"));
+
+        Mockito.verify(mockBookRepository).save(Mockito.any());
     }
 
     @Test
-    void updateBook() {
+    @DisplayName("WhenUpdateBook_thenReturnBookEntityUpdateStatusOk")
+    void whenUpdateBook_thenReturnBookEntityUpdateStatusOk() throws Exception {
+        Mockito.when(mockBookRepository.findById(0L)).thenReturn(Optional.of(oneTestBook));
+        Mockito.when(mockBookRepository.save(Mockito.any())).thenReturn(oneTestBook);
+        String url =("/api/books/0");
+        mvc.perform(put(url)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(oneTestBook)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.genre").value("Terror"))
+                .andExpect(jsonPath("$.author").value("Stephen King"))
+                .andExpect(jsonPath("$.image").value("image.jpeg"))
+                .andExpect(jsonPath("$.title").value("It"))
+                .andExpect(jsonPath("$.subtitle").value("Worst clown ever"))
+                .andExpect(jsonPath("$.publisher").value("Viking Publisher"))
+                .andExpect(jsonPath("$.year").value("1986"))
+                .andExpect(jsonPath("$.pages").value(1253))
+                .andExpect(jsonPath("$.isbn").value("4578-8665"));
+
+        Mockito.verify(mockBookRepository).findById(0L);
+        Mockito.verify(mockBookRepository).save(Mockito.any());
     }
 
     @Test
-    void delete() {
+    void whenDeleteBook_thenResponseNoContent() throws Exception{
+        Mockito.when(mockBookRepository.findById(0L)).thenReturn(Optional.of(oneTestBook));
+        String url =("/api/books/0");
+        mvc.perform(delete(url)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(oneTestBook)))
+                .andExpect(status().isNoContent());
+
+        Mockito.verify(mockBookRepository).deleteById(0L);
     }
 }
