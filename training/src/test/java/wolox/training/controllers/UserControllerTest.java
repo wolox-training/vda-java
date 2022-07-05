@@ -119,6 +119,20 @@ class UserControllerTest {
     }
 
     @Test
+    @DisplayName("WhenFindAllInEmptyBD_thenReturnNotFoundException")
+    void whenFindAllInEmptyBD_thenReturnNotFoundException() throws Exception {
+        userTestList.remove(0);
+        userTestList.remove(0);
+        Mockito.when(mockUserRepository.findAll()).thenReturn(userTestList);
+        String url =("/api/users");
+        mvc.perform(get(url)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+
+        Mockito.verify(mockUserRepository).findAll();
+    }
+
+    @Test
     @DisplayName("WhenFindById_thenReturnFoundUserStatusOk")
     void whenFindById_thenReturnFoundUserStatusOk() throws Exception {
         Mockito.when(mockUserRepository.findById(0L))
@@ -134,6 +148,18 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.birthdate").value(birthDate));
         Mockito.verify(mockUserRepository).findById(0L);
 
+    }
+
+    @Test
+    @DisplayName("WhenFindById_thenReturnFoundUserStatusOk")
+    void whenFindNotById_thenReturnNotFoundException() throws Exception {
+        Mockito.when(mockUserRepository.findById(0L))
+                .thenReturn(Optional.of(oneTestUser));
+        String url =("/api/users/1");
+        mvc.perform(get(url)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+        Mockito.verify(mockUserRepository).findById(1L);
     }
 
     @Test
@@ -174,8 +200,50 @@ class UserControllerTest {
     }
 
     @Test
+    @DisplayName("WhenUpdateNotExistUser_thenReturnNotFoundException")
+    void whenUpdateNotExistUser_thenReturnNotFoundException() throws Exception {
+        Mockito.when(mockUserRepository.findById(0L)).thenReturn(userTestList.stream()
+                                                    .filter(user -> user.getId()==1L)
+                                                    .findAny());
+        Mockito.when(mockUserRepository.save(Mockito.any())).thenReturn(oneTestUser);
+        String url =("/api/users/0");
+        mvc.perform(put(url)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(oneTestUser)))
+                .andExpect(status().isNotFound());
+        Mockito.verify(mockUserRepository).findById(0L);
+    }
+
+    @Test
+    @DisplayName("WhenUpdateMismatchUser_thenReturnBadRequestException")
+    void whenUpdateMismatchUser_thenReturnBadRequestException() throws Exception {
+        Mockito.when(mockUserRepository.findById(0L)).thenReturn(userTestList.stream()
+                .filter(user -> user.getId()==0L)
+                .findAny());
+        Mockito.when(mockUserRepository.save(Mockito.any())).thenReturn(oneTestUser);
+        String url =("/api/users/1");
+        mvc.perform(put(url)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(oneTestUser)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("WhenDelete_thenRespondIsNotContent")
     void whenDelete_thenRespondIsNotContent() throws Exception{
+        Mockito.when(mockUserRepository.findById(0L)).thenReturn(Optional.of(oneTestUser));
+        String url =("/api/users/0");
+        mvc.perform(delete(url)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(oneTestBook)))
+                .andExpect(status().isNoContent());
+
+        Mockito.verify(mockUserRepository).deleteById(0L);
+    }
+
+    @Test
+    @DisplayName("WhenDeleteNotExistUser_thenRespondNotFoundException")
+    void whenDeleteNotExistUser_thenRespondNotFoundException() throws Exception{
         Mockito.when(mockUserRepository.findById(0L)).thenReturn(Optional.of(oneTestUser));
         String url =("/api/users/0");
         mvc.perform(delete(url)
@@ -203,6 +271,33 @@ class UserControllerTest {
         Mockito.verify(mockBookRepository).findById(0L);
         Mockito.verify(mockUserRepository).save(Mockito.any());
     }
+    @Test
+    @DisplayName("whenTryAddNotExistBookInUserCollection_thenRespondNotFoundException")
+    void whenTryAddNotExistBookInUserCollection_thenRespondNotFoundException()throws Exception {
+        Mockito.when(mockBookRepository.findById(0L)).thenReturn(Optional.empty());
+        Mockito.when(mockUserRepository.save(oneTestUser)).thenReturn(oneTestUser);
+
+        String url =("/api/users/0/books");
+        mvc.perform(post(url)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":0}"))
+                .andExpect(status().isNotFound());
+        Mockito.verify(mockBookRepository).findById(0L);
+    }
+
+    @Test
+    @DisplayName("WhenTryAddBookNotExistUser_thenRespondNotFoundException")
+    void whenTryAddBookNotExistUser_thenRespondNotFoundException()throws Exception {
+        Mockito.when(mockBookRepository.findById(0L)).thenReturn(Optional.of(oneTestBook));
+        Mockito.when(mockUserRepository.findById(0L)).thenReturn(Optional.empty());
+
+        String url =("/api/users/0/books");
+        mvc.perform(post(url)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":0}"))
+                .andExpect(status().isNotFound());
+        Mockito.verify(mockUserRepository).findById(0L);
+    }
 
     @Test
     @DisplayName("WhenRemoveBookInUserCollection_thenRespondStatusIsNotContent")
@@ -220,5 +315,33 @@ class UserControllerTest {
         Mockito.verify(mockUserRepository).findById(1L);
         Mockito.verify(mockBookRepository).findById(0L);
         Mockito.verify(mockUserRepository).save(Mockito.any());
+    }
+
+    @Test
+    @DisplayName("whenTryDeleteNotExistBookInUserCollection_thenRespondNotFoundException")
+    void whenTryDeleteNotExistBookInUserCollection_thenRespondNotFoundException()throws Exception {
+        Mockito.when(mockBookRepository.findById(0L)).thenReturn(Optional.empty());
+        Mockito.when(mockUserRepository.save(oneTestUser)).thenReturn(oneTestUser);
+
+        String url =("/api/users/0/books");
+        mvc.perform(delete(url)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":0}"))
+                .andExpect(status().isNotFound());
+        Mockito.verify(mockBookRepository).findById(0L);
+    }
+
+    @Test
+    @DisplayName("WhenTryDeleteBookNotExistUser_thenRespondNotFoundException")
+    void whenTryDeleteBookNotExistUser_thenRespondNotFoundException()throws Exception {
+        Mockito.when(mockBookRepository.findById(0L)).thenReturn(Optional.of(oneTestBook));
+        Mockito.when(mockUserRepository.findById(0L)).thenReturn(Optional.empty());
+
+        String url =("/api/users/0/books");
+        mvc.perform(delete(url)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":0}"))
+                .andExpect(status().isNotFound());
+        Mockito.verify(mockUserRepository).findById(0L);
     }
 }

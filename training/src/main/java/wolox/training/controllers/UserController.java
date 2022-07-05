@@ -149,7 +149,7 @@ public class UserController {
     @PostMapping(path = "/{id}/books",
             consumes = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.OK)
-    public User addBookinUserCollection(
+    public User addBookInUserCollection(
             @ApiParam(value = "New Book Entity", required = true)
             @RequestBody Book book,
             @ApiParam(value = "User id to update", required = true)

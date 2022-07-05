@@ -93,6 +93,18 @@ class BookControllerTest {
                 .andExpect(jsonPath("$",hasSize(2)));
         Mockito.verify(mockBookRepository).findAll();
     }
+    @Test
+    @DisplayName("WhenFindAllInEmptyCollection_thenReturnExceptionNotFoundException")
+    void whenFindAllInEmptyCollection_thenReturnExceptionNotFoundException () throws Exception {
+        books.remove(0);
+        books.remove(0);
+        Mockito.when(mockBookRepository.findAll()).thenReturn(books);
+        String url =("/api/books");
+        mvc.perform(get(url)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+        Mockito.verify(mockBookRepository).findAll();
+    }
 
     @Test
     @DisplayName("WhenFindByTitle_thenReturnBooksListStatusOK")
@@ -111,6 +123,20 @@ class BookControllerTest {
                         + ",\"year\":\"1986\",\"pages\":1253,\"isbn\":\"4578-8665\"}]"));
 
         Mockito.verify(mockBookRepository).findByTitle("It");
+    }
+
+    @Test
+    @DisplayName("WhenFindByTitleAndNotFound_thenReturnNotFoundException")
+    void whenFindByTitleAndNotFound_thenReturnNotFoundException() throws Exception {
+        Mockito.when(mockBookRepository.findByTitle("TestTitleNotFound"))
+                .thenReturn(books.stream()
+                        .filter(book -> book.getTitle().equals("TestTitleNotFound"))
+                        .collect(Collectors.toList()));
+        String url =("/api/books?title=TestTitleNotFound");
+        mvc.perform(get(url)
+                        .contentType(MediaType.ALL_VALUE))
+                .andExpect(status().isNotFound());
+        Mockito.verify(mockBookRepository).findByTitle("TestTitleNotFound");
     }
 
     @Test
@@ -185,6 +211,37 @@ class BookControllerTest {
     }
 
     @Test
+    @DisplayName("WhenUpdateNotExistBook_thenNotFoundException")
+    void whenUpdateNotExistBook_thenNotFoundException() throws Exception {
+        Mockito.when(mockBookRepository.findById(1L))
+                .thenReturn(books.stream()
+                        .filter(book -> book.getId()==1L)
+                        .findFirst());
+        Mockito.when(mockBookRepository.save(Mockito.any())).thenReturn(oneTestBook);
+        String url =("/api/books/0");
+        mvc.perform(put(url)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(oneTestBook)))
+                .andExpect(status().isNotFound());
+        Mockito.verify(mockBookRepository).findById(0L);
+    }
+
+    @Test
+    @DisplayName("WhenUpdateMismatchBook_thenBadRequestException")
+    void whenUpdateMismatchBook_thenBadRequestException() throws Exception {
+        Mockito.when(mockBookRepository.findById(0L))
+                .thenReturn(books.stream()
+                        .filter(book -> book.getId()==0L)
+                        .findFirst());
+        Mockito.when(mockBookRepository.save(Mockito.any())).thenReturn(oneTestBook);
+        String url =("/api/books/1");
+        mvc.perform(put(url)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(oneTestBook)))
+                .andExpect(status().isBadRequest());
+    }
+    @Test
+    @DisplayName("WhenDeleteBook_thenResponseNoContent")
     void whenDeleteBook_thenResponseNoContent() throws Exception{
         Mockito.when(mockBookRepository.findById(0L)).thenReturn(Optional.of(oneTestBook));
         String url =("/api/books/0");
@@ -194,5 +251,16 @@ class BookControllerTest {
                 .andExpect(status().isNoContent());
 
         Mockito.verify(mockBookRepository).deleteById(0L);
+    }
+
+    @Test
+    @DisplayName("WhenDeleteNotExistBook_thenResponseNotFoundException")
+    void whenDeleteNotExistBook_thenResponseNotFoundException() throws Exception{
+        Mockito.when(mockBookRepository.findById(0L)).thenReturn(Optional.of(oneTestBook));
+        String url =("/api/books/1");
+        mvc.perform(delete(url)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(oneTestBook)))
+                .andExpect(status().isNotFound());
     }
 }
