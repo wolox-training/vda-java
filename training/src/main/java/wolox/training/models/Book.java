@@ -52,7 +52,7 @@ public class Book implements Serializable {
     @Column(nullable = false)
     private int pages;
     @ApiModelProperty(notes = "isbn", required = true)
-    @Column(nullable = false)
+    @Column(nullable = false,unique = true)
     private String isbn;
 
     @ManyToMany(fetch = FetchType.LAZY,
