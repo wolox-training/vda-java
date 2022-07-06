@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @EnableJpaRepositories("wolox.training.repositoies")
-@EntityScan("wolox.training..models")
+@EntityScan({"wolox.training.models","wolox.training.dtos"})
 @SpringBootApplication
 public class TrainingApplication {
 
