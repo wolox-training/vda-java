@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import wolox.training.exceptions.BookNotFoundException;
@@ -122,12 +124,12 @@ public class UserController {
             @ApiResponse(code = 400, message = "User not found"),
     })
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
             @ApiParam(value = "User Id to delete", required = true)
             @PathVariable Long id) {
         userRepository.findById(id)
-                .orElseThrow(()-> new UserIdMismatchException("User Id:"+id+" not found"));
+                .orElseThrow(()-> new UserNotFoundException("User Id:"+id+" not found"));
         userRepository.deleteById(id);
     }
 
@@ -136,7 +138,7 @@ public class UserController {
      * This method adds a book in user collections
      *
      * @param book :Object book to add
-     * @param userId: user id to update
+     * @param id: user id to update
      * @throws BookNotFoundException : throw this exception if book not found
      * @throws UserNotFoundException: throw this exception if User not found
      */
@@ -146,19 +148,20 @@ public class UserController {
             @ApiResponse(code = 400, message = "User not found"),
             @ApiResponse(code = 400, message = "Book not found"),
             })
-    @PostMapping(path = "/{userId}/books",
+    @PostMapping(path = "/{id}/books",
             consumes = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.OK)
-    public void addBookinUserCollection(
+    public User addBookInUserCollection(
             @ApiParam(value = "New Book Entity", required = true)
             @RequestBody Book book,
             @ApiParam(value = "User id to update", required = true)
-            @PathVariable Long userId){
+            @PathVariable Long id){
         Book finalBook = bookRepository.findById(book.getId())
                 .orElseThrow(()->new BookNotFoundException("Book Id:"+ book.getId()+" not found"));
-        userRepository.findById(userId)
-                .orElseThrow(()-> new UserNotFoundException("User Id:"+userId+" not found"))
-                .addBookToCollection(finalBook);
+        User user = userRepository.findById(id)
+                .orElseThrow(()-> new UserNotFoundException("User Id:"+id+" not found"));
+        user.addBookToCollection(finalBook);
+        return userRepository.save(user);
     }
 
     /**
@@ -166,7 +169,7 @@ public class UserController {
      * This Method removes a book of user collection
      *
      * @param book : book to remove
-     * @param userId : userId
+     * @param id : userId
      * @throws BookNotFoundException : throw this exception if book not found
      * @throws UserNotFoundException: throw this exception if User not found
      */
@@ -177,19 +180,38 @@ public class UserController {
             @ApiResponse(code = 400, message = "User not found"),
             @ApiResponse(code = 400, message = "Book not found"),
     })
-    @DeleteMapping(path = "/{userId}/books",
-            consumes = {MediaType.APPLICATION_JSON_VALUE})
+    @DeleteMapping(path = "/{id}/books",
+            consumes = {MediaType.APPLICATION_JSON_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE}
+    )
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeBookInUserCollection(
+    public User removeBookInUserCollection(
             @ApiParam(value = "New Book Entity", required = true)
             @RequestBody Book book,
             @ApiParam(value = "User id to update", required = true)
-            @PathVariable Long userId){
+            @PathVariable Long id){
 
         Book finalBook = bookRepository.findById(book.getId())
                 .orElseThrow(()->new BookNotFoundException("Book Id:"+ book.getId()+" not found"));
-        userRepository.findById(userId)
-                .orElseThrow(()-> new UserNotFoundException("User Id:"+userId+" not found"))
-                .removeBookToCollection(finalBook);
+        User user = userRepository.findById(id)
+                .orElseThrow(()-> new UserNotFoundException("User Id:"+id+" not found"));
+        user.removeBookToCollection(finalBook);
+        return userRepository.save(user);
+    }
+
+    @GetMapping(params = {"start_date", "end_date","name"})
+    @ResponseStatus(HttpStatus.OK)
+    public List<User> findByBirthdayAndName(@RequestParam String start_date,
+                                            @RequestParam String end_date,
+                                            @RequestParam String name) {
+        LocalDate startDate = LocalDate.parse(start_date);
+        LocalDate endDate= LocalDate.parse(end_date);
+        List<User> users = userRepository
+                .findByBirthdateBetweenAndNameContainingIgnoreCase(startDate, endDate, name);
+        if(users.isEmpty()){
+            throw new UserNotFoundException();
+        }else {
+            return users;
+        }
     }
 }
