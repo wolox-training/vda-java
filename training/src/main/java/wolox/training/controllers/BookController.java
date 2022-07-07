@@ -132,7 +132,16 @@ public class BookController {
                 .orElseThrow(()-> new BookNotFoundException("Book Id:"+id+" not found"));
         bookRepository.deleteById(id);
     }
-
+    /**
+     *
+     * This method returns {@link  List<Book>} filtered for isbn
+     *
+     * @param isbn :Book's isbn to search
+     * @return {@link  Book} and it creates book on local database when the
+     * book is not found the local database but is in openlibrary.
+     * @throws BookNotFoundException : trows exception if the book was not found
+     *
+     */
     @GetMapping(params = "isbn")
     public ResponseEntity<Book> findByIsbn(@RequestParam String isbn) {
         Book book = bookRepository.findByIsbn(isbn)
@@ -146,6 +155,29 @@ public class BookController {
                 } catch (Exception e) { throw new RuntimeException(e); }
         }
         return ResponseEntity.status(HttpStatus.OK).body(book);
+    }
+    /**
+     *
+     * This method returns {@link  List<Book>} filtered for Publisher, genre and year
+     *
+     * @param publisher :Book's publisher to search
+     * @param genre:Book's genre to search
+     * @param year:Book's genre to search
+     * @return {@link  List<Book>}
+     * @throws BookNotFoundException : trows exception if the book was not found
+     *
+     */
+    @GetMapping(params ={"publisher", "genre", "year"})
+    @ResponseStatus(HttpStatus.OK)
+    public List<Book> findByPublisherGenreAndYear (@RequestParam String publisher,
+                                                    @RequestParam String genre,
+                                                    @RequestParam String year){
+        List<Book> books = bookRepository.findByPublisherAndGenreAndYear(publisher,genre,year);
+        if (books.isEmpty()){
+            throw new BookNotFoundException();
+        }else{
+            return books;
+        }
     }
 
 }

@@ -68,10 +68,20 @@ class BookControllerTest {
         twoTestBook.setSubtitle("-");
         twoTestBook.setTitle("Harry Potter and the philosopher's Stone");
         twoTestBook.setYear("1997");
+        Book threTestBook = new Book();
+        threTestBook.setAuthor("J.K Rowling");
+        threTestBook.setGenre("Fantasy");
+        threTestBook.setImage("image-harry.png");
+        threTestBook.setIsbn("9780747532111");
+        threTestBook.setPages(226);
+        threTestBook.setPublisher("Bloomsbury Publishing");
+        threTestBook.setSubtitle("-");
+        threTestBook.setTitle("Harry Potter and the philosopher's Stone - test");
+        threTestBook.setYear("1997");
         books = new ArrayList<>();
         books.add(oneTestBook);
         books.add(twoTestBook);
-
+        books.add(threTestBook);
     }
 
     @Test
@@ -83,19 +93,25 @@ class BookControllerTest {
                     .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json("[{\"id\":0,\"genre\":\"Terror\",\"author\""
-                        + ":\"Stephen King\",\"image\":\"image.jpeg\",\"title\":\"It\",\"subtitle\""
-                        + ":\"Worst clown ever\",\"publisher\":\"Viking Publisher\",\"year\":\""
-                        + "1986\",\"pages\":1253,\"isbn\":\"4578-8665\"},{\"id\":0,\"genre\":\"Fantasy\""
-                        + ",\"author\":\"J.K Rowling\",\"image\":\"image-harry.png\",\"title\":\""
-                        + "Harry Potter and the philosopher's Stone\",\"subtitle\":\"-\",\"publisher\":\""
-                        + "Bloomsbury Publishing\",\"year\":\"1997\",\"pages\":226,\"isbn\":\"9780747532743\"}]"))
-                .andExpect(jsonPath("$",hasSize(2)));
+                .andExpect(content().json("[{\"id\":0,\"genre\":\"Terror\","
+                        + "\"author\":\"Stephen King\",\"image\":\"image.jpeg\",\"title\":\"It\","
+                        + "\"subtitle\":\"Worst clown ever\",\"publisher\":\"Viking Publisher\","
+                        + "\"year\":\"1986\",\"pages\":1253,\"isbn\":\"4578-8665\"},{\"id\":0,"
+                        + "\"genre\":\"Fantasy\",\"author\":\"J.K Rowling\","
+                        + "\"image\":\"image-harry.png\",\"title\":\"Harry Potter and the philosopher's Stone\","
+                        + "\"subtitle\":\"-\",\"publisher\":\"Bloomsbury Publishing\","
+                        + "\"year\":\"1997\",\"pages\":226,\"isbn\":\"9780747532743\"},{\"id\":0,\"genre\":\"Fantasy\","
+                        + "\"author\":\"J.K Rowling\",\"image\":\"image-harry.png\","
+                        + "\"title\":\"Harry Potter and the philosopher's Stone - test\",\"subtitle\":\"-\","
+                        + "\"publisher\":\"Bloomsbury Publishing\",\"year\":\"1997\",\"pages\":226,"
+                        + "\"isbn\":\"9780747532111\"}]"))
+                .andExpect(jsonPath("$",hasSize(3)));
         Mockito.verify(mockBookRepository).findAll();
     }
     @Test
     @DisplayName("WhenFindAllInEmptyCollection_thenReturnExceptionNotFoundException")
     void whenFindAllInEmptyCollection_thenReturnExceptionNotFoundException () throws Exception {
+        books.remove(0);
         books.remove(0);
         books.remove(0);
         Mockito.when(mockBookRepository.findAll()).thenReturn(books);
@@ -262,5 +278,58 @@ class BookControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(oneTestBook)))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("WhenFindByPublisherGenreAndYear_thenReturnFilterListBooksWhitStatusOK")
+    void whenFindByPublisherGenreAndYear_thenReturnFilterListBooksWhitStatusOK () throws Exception {
+        String publisher = "Bloomsbury Publishing";
+        String genre="Fantasy";
+        String year="1997";
+        Mockito.when(mockBookRepository.findByPublisherAndGenreAndYear("Bloomsbury Publishing"
+                ,"Fantasy", "1997"))
+                .thenReturn(books.stream().filter(book -> book.getPublisher().equals(publisher))
+                        .filter(book -> book.getGenre().equals(genre))
+                        .filter(book -> book.getYear().equals(year))
+                        .collect(Collectors.toList()));
+        String url =("/api/books");
+        mvc.perform(get(url)
+                        .param("publisher", publisher)
+                        .param("genre", genre)
+                        .param("year", year)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("[{\"id\":0,\"genre\":\"Fantasy\",\"author\":\"J.K Rowling\","
+                        + "\"image\":\"image-harry.png\",\"title\":\"Harry Potter and the philosopher's Stone\","
+                        + "\"subtitle\":\"-\",\"publisher\":\"Bloomsbury Publishing\",\"year\":\"1997\","
+                        + "\"pages\":226,\"isbn\":\"9780747532743\"},{\"id\":0,\"genre\":\"Fantasy\","
+                        + "\"author\":\"J.K Rowling\",\"image\":\"image-harry.png\","
+                        + "\"title\":\"Harry Potter and the philosopher's Stone - test\",\"subtitle\":\"-\","
+                        + "\"publisher\":\"Bloomsbury Publishing\",\"year\":\"1997\",\"pages\":226,"
+                        + "\"isbn\":\"9780747532111\"}]"))
+                .andExpect(jsonPath("$",hasSize(2)));
+        Mockito.verify(mockBookRepository).findByPublisherAndGenreAndYear(publisher,genre,year);
+    }
+    @Test
+    @DisplayName("whenFindPublisherGennderYerarFilter_thenReturnExceptionNotFoundException")
+    void whenFindPublisherGennderYerarFilter_thenReturnExceptionNotFoundException () throws Exception {
+        String publisher = "Bloomsbury";
+        String genre="Fantasy Test";
+        String year="1997";
+        Mockito.when(mockBookRepository.findByPublisherAndGenreAndYear("Bloomsbury Publishing"
+                        ,"Fantasy", "1997"))
+                .thenReturn(books.stream().filter(book -> book.getPublisher().equals(publisher))
+                        .filter(book -> book.getGenre().equals(genre))
+                        .filter(book -> book.getYear().equals(year))
+                        .collect(Collectors.toList()));
+        String url =("/api/books");
+        mvc.perform(get(url)
+                        .param("publisher", publisher)
+                        .param("genre", genre)
+                        .param("year", year)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+        Mockito.verify(mockBookRepository).findByPublisherAndGenreAndYear(publisher,genre,year);
     }
 }

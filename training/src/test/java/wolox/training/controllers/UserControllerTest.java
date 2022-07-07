@@ -1,6 +1,7 @@
 package wolox.training.controllers;
 
 import static java.util.Arrays.*;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -90,9 +92,14 @@ class UserControllerTest {
         twoTestUser.setUsername("tangarces");
         twoTestUser.setBirthdate(LocalDate.of(1992,8,30));
         twoTestUser.addBookToCollection(oneTestBook);
+        User threeTestUser = new User();
+        threeTestUser.setName("Tania Rivas");
+        threeTestUser.setUsername("tanrivas");
+        threeTestUser.setBirthdate(LocalDate.of(1993,8,30));
         userTestList=new ArrayList<>();
         userTestList.add(oneTestUser);
         userTestList.add(twoTestUser);
+        userTestList.add(threeTestUser);
     }
 
 
@@ -107,13 +114,14 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().json("[{\"id\":0,\"username\":\"rammeneces\","
-                        + "\"name\":\"Ramiro Meneces\",\"birthdate\":[1980,6,25],"
-                        + "\"books\":[]},{\"id\":0,\"username\":\"tangarces\","
-                        + "\"name\":\"Tania Garces\",\"birthdate\":[1992,8,30],"
-                        + "\"books\":[{\"id\":0,\"genre\":\"Terror\",\"author\":\"Stephen King\","
-                        + "\"image\":\"image.jpeg\",\"title\":\"It\",\"subtitle\":\"Worst clown ever\","
-                        + "\"publisher\":\"Viking Publisher\",\"year\":\"1986\",\"pages\":1253,"
-                        + "\"isbn\":\"4578-8665\"}]}]"));
+                        + "\"name\":\"Ramiro Meneces\",\"birthdate\":[1980,6,25],\"books\":[]},"
+                        + "{\"id\":0,\"username\":\"tangarces\",\"name\":\"Tania Garces\","
+                        + "\"birthdate\":[1992,8,30],\"books\":[{\"id\":0,\"genre\":\"Terror\","
+                        + "\"author\":\"Stephen King\",\"image\":\"image.jpeg\",\"title\":\"It\","
+                        + "\"subtitle\":\"Worst clown ever\",\"publisher\":\"Viking Publisher\","
+                        + "\"year\":\"1986\",\"pages\":1253,\"isbn\":\"4578-8665\"}]},{\"id\":0,"
+                        + "\"username\":\"tanrivas\",\"name\":\"Tania Rivas\",\"birthdate\":[1993,8,30],"
+                        + "\"books\":[]}]"));
 
         Mockito.verify(mockUserRepository).findAll();
     }
@@ -121,6 +129,7 @@ class UserControllerTest {
     @Test
     @DisplayName("WhenFindAllInEmptyBD_thenReturnNotFoundException")
     void whenFindAllInEmptyBD_thenReturnNotFoundException() throws Exception {
+        userTestList.remove(0);
         userTestList.remove(0);
         userTestList.remove(0);
         Mockito.when(mockUserRepository.findAll()).thenReturn(userTestList);
@@ -336,12 +345,73 @@ class UserControllerTest {
     void whenTryDeleteBookNotExistUser_thenRespondNotFoundException()throws Exception {
         Mockito.when(mockBookRepository.findById(0L)).thenReturn(Optional.of(oneTestBook));
         Mockito.when(mockUserRepository.findById(0L)).thenReturn(Optional.empty());
-
         String url =("/api/users/0/books");
         mvc.perform(delete(url)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"id\":0}"))
                 .andExpect(status().isNotFound());
         Mockito.verify(mockUserRepository).findById(0L);
+    }
+
+    @Test
+    @DisplayName("whenFilterUsersByDateBirthdayAndName_thenReturnListUserFilteredWhitStatusOK")
+    void whenFilterUsersByDateBirthdayAndName_thenReturnListUserFilteredWhitStatusOK() throws Exception {
+        String startDate ="1990-08-01";
+        String endDate = "1994-09-01";
+        String name="Tan";
+        Mockito.when(mockUserRepository
+                        .findByBirthdateBetweenAndNameContainingIgnoreCase(LocalDate.parse(startDate)
+                                ,LocalDate.parse(endDate)
+                                ,name))
+                .thenReturn(userTestList.stream().filter(user -> user.getName().contains(name))
+                        .filter(user -> user.getBirthdate().isAfter(LocalDate.parse(startDate)))
+                        .filter(user -> user.getBirthdate().isBefore(LocalDate.parse(endDate)))
+                        .collect(Collectors.toList()));
+        String url =("/api/users");
+        mvc.perform(get(url)
+                        .param("start_date", startDate)
+                        .param("end_date", endDate)
+                        .param("name",name)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("[{\"id\":0,\"username\":\"tangarces\",\"name\":\"Tania Garces\","
+                        + "\"birthdate\":[1992,8,30],\"books\":[{\"id\":0,\"genre\":\"Terror\","
+                        + "\"author\":\"Stephen King\",\"image\":\"image.jpeg\",\"title\":\"It\","
+                        + "\"subtitle\":\"Worst clown ever\",\"publisher\":\"Viking Publisher\",\"year\":\"1986\","
+                        + "\"pages\":1253,\"isbn\":\"4578-8665\"}]},{\"id\":0,\"username\":\"tanrivas\","
+                        + "\"name\":\"Tania Rivas\",\"birthdate\":[1993,8,30],\"books\":[]}]"))
+                .andExpect(jsonPath("$",hasSize(2)));
+
+        Mockito.verify(mockUserRepository)
+                .findByBirthdateBetweenAndNameContainingIgnoreCase(LocalDate.parse(startDate)
+                        ,LocalDate.parse(endDate),name);
+    }
+
+    @Test
+    @DisplayName("WhenFilterUsersByDateBirthdayAndNameEmpty_thenReturnNotFoundUserException")
+    void whenFilterUsersByDateBirthdayAndNameEmpty_thenReturnNotFoundUserException() throws Exception {
+        String startDate ="1990-08-01";
+        String endDate = "1990-09-01";
+        String name="Tan";
+        Mockito.when(mockUserRepository
+                        .findByBirthdateBetweenAndNameContainingIgnoreCase(LocalDate.parse(startDate)
+                                ,LocalDate.parse(endDate)
+                                ,name))
+                .thenReturn(userTestList.stream().filter(user -> user.getName().contains(name))
+                        .filter(user -> user.getBirthdate().isAfter(LocalDate.parse(startDate)))
+                        .filter(user -> user.getBirthdate().isBefore(LocalDate.parse(endDate)))
+                        .collect(Collectors.toList()));
+        String url =("/api/users");
+        mvc.perform(get(url)
+                        .param("start_date", startDate)
+                        .param("end_date", endDate)
+                        .param("name",name)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+
+        Mockito.verify(mockUserRepository)
+                .findByBirthdateBetweenAndNameContainingIgnoreCase(LocalDate.parse(startDate)
+                        ,LocalDate.parse(endDate),name);
     }
 }
