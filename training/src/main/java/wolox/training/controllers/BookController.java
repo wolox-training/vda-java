@@ -169,9 +169,12 @@ public class BookController {
      */
     @GetMapping(params ={"publisher", "genre", "year"})
     @ResponseStatus(HttpStatus.OK)
-    public List<Book> findByPublisherGenreAndYear (@RequestParam String publisher,
+    public List<Book> findByPublisherGenreAndYear ( @RequestParam String publisher,
                                                     @RequestParam String genre,
                                                     @RequestParam String year){
+        publisher = publisher.isEmpty()?null:publisher;
+        genre=genre.isEmpty()?null:genre;
+        year=year.isEmpty()?null:year;
         List<Book> books = bookRepository.findByPublisherAndGenreAndYear(publisher,genre,year);
         if (books.isEmpty()){
             throw new BookNotFoundException();

@@ -204,8 +204,9 @@ public class UserController {
     public List<User> findByBirthdayAndName(@RequestParam String start_date,
                                             @RequestParam String end_date,
                                             @RequestParam String name) {
-        LocalDate startDate = LocalDate.parse(start_date);
-        LocalDate endDate= LocalDate.parse(end_date);
+        name = name.isEmpty()?null:name;
+        LocalDate startDate = start_date.isEmpty()?LocalDate.parse("1000-01-01"):LocalDate.parse(start_date);
+        LocalDate endDate= end_date.isEmpty()?LocalDate.now():LocalDate.parse(end_date);
         List<User> users = userRepository
                 .findByBirthdateBetweenAndNameContainingIgnoreCase(startDate, endDate, name);
         if(users.isEmpty()){
