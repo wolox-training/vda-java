@@ -119,7 +119,6 @@ public class User implements Serializable {
         Preconditions.checkNotNull(book,OBJECT_NULL_MESSAGE,nameParameter);
         if(this.books.contains(book)){
             this.books.remove(book);
-            book.getUsers().remove(this);
         }else {
             throw new BookNotFoundException();
         }
