@@ -15,8 +15,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
-
-
 @Entity(name = "books")
 @ApiModel(description = "Book from LibraryAPI")
 public class Book implements Serializable {

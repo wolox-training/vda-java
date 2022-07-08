@@ -110,7 +110,6 @@ public class User implements Serializable {
             throw new BookAlreadyOwnedException();
         }else{
             this.books.add(book);
-            book.getUsers().add(this);
         }
     }
 
@@ -119,7 +118,6 @@ public class User implements Serializable {
         Preconditions.checkNotNull(book,OBJECT_NULL_MESSAGE,nameParameter);
         if(this.books.contains(book)){
             this.books.remove(book);
-            book.getUsers().remove(this);
         }else {
             throw new BookNotFoundException();
         }

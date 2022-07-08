@@ -76,7 +76,7 @@ public class BookController {
      *
      * This method returns a list with books filtered for name
      *
-     * @param title : title to search
+     * @param title :Book's Title to search
      * @return {@link List} of {@link Book} filtered for title
      * @throws BookNotFoundException: trows exception if the book was not found
      *
