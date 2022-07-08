@@ -110,7 +110,6 @@ public class User implements Serializable {
             throw new BookAlreadyOwnedException();
         }else{
             this.books.add(book);
-            book.getUsers().add(this);
         }
     }
 
