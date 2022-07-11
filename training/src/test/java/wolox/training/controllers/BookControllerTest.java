@@ -87,7 +87,9 @@ class BookControllerTest {
     @Test
     @DisplayName("WhenFindAll_thenReturnListAllBooksWhitStatusOK")
     void whenFindAll_thenReturnListAllBooksWhitStatusOK () throws Exception {
-        Mockito.when(mockBookRepository.findAll()).thenReturn(books);
+        Mockito.when(mockBookRepository.findBooksWithOptionalFilters(null,null,null,null,
+                        null,null,null))
+                .thenReturn(books);
         String url =("/api/books");
         mvc.perform(get(url)
                     .contentType(MediaType.APPLICATION_JSON))
@@ -106,7 +108,8 @@ class BookControllerTest {
                         + "\"publisher\":\"Bloomsbury Publishing\",\"year\":\"1997\",\"pages\":226,"
                         + "\"isbn\":\"9780747532111\"}]"))
                 .andExpect(jsonPath("$",hasSize(3)));
-        Mockito.verify(mockBookRepository).findAll();
+        Mockito.verify(mockBookRepository).findBooksWithOptionalFilters(null,null,null,null,
+                null,null,null);
     }
     @Test
     @DisplayName("WhenFindAllInEmptyCollection_thenReturnExceptionNotFoundException")
@@ -114,45 +117,14 @@ class BookControllerTest {
         books.remove(0);
         books.remove(0);
         books.remove(0);
-        Mockito.when(mockBookRepository.findAll()).thenReturn(books);
+        Mockito.when(mockBookRepository.findBooksWithOptionalFilters(null,null,null,null,
+                null,null,null)).thenReturn(books);
         String url =("/api/books");
         mvc.perform(get(url)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
-        Mockito.verify(mockBookRepository).findAll();
-    }
-
-    @Test
-    @DisplayName("WhenFindByTitle_thenReturnBooksListStatusOK")
-    void whenFindByTitle_thenReturnBooksListStatusOK() throws Exception {
-        Mockito.when(mockBookRepository.findByTitle("It"))
-                .thenReturn(books.stream()
-                        .filter(book -> book.getTitle().equals("It"))
-                        .collect(Collectors.toList()));
-        String url =("/api/books?title=It");
-        mvc.perform(get(url)
-                        .contentType(MediaType.ALL_VALUE))
-                .andExpect(status().isOk())
-                .andExpect(content().json("[{\"id\":0,\"genre\":\"Terror\","
-                        + "\"author\":\"Stephen King\",\"image\":\"image.jpeg\",\"title\""
-                        + ":\"It\",\"subtitle\":\"Worst clown ever\",\"publisher\":\"Viking Publisher\""
-                        + ",\"year\":\"1986\",\"pages\":1253,\"isbn\":\"4578-8665\"}]"));
-
-        Mockito.verify(mockBookRepository).findByTitle("It");
-    }
-
-    @Test
-    @DisplayName("WhenFindByTitleAndNotFound_thenReturnNotFoundException")
-    void whenFindByTitleAndNotFound_thenReturnNotFoundException() throws Exception {
-        Mockito.when(mockBookRepository.findByTitle("TestTitleNotFound"))
-                .thenReturn(books.stream()
-                        .filter(book -> book.getTitle().equals("TestTitleNotFound"))
-                        .collect(Collectors.toList()));
-        String url =("/api/books?title=TestTitleNotFound");
-        mvc.perform(get(url)
-                        .contentType(MediaType.ALL_VALUE))
-                .andExpect(status().isNotFound());
-        Mockito.verify(mockBookRepository).findByTitle("TestTitleNotFound");
+        Mockito.verify(mockBookRepository).findBooksWithOptionalFilters(null,null,null,null,
+                null,null,null);
     }
 
     @Test
@@ -281,13 +253,19 @@ class BookControllerTest {
     }
 
     @Test
-    @DisplayName("WhenFindByPublisherGenreAndYear_thenReturnFilterListBooksWhitStatusOK")
-    void whenFindByPublisherGenreAndYear_thenReturnFilterListBooksWhitStatusOK () throws Exception {
+    @DisplayName("WhenFindByWhitParams_thenReturnFilterListBooksWhitStatusOK")
+    void whenFindByWhitParams_thenReturnFilterListBooksWhitStatusOK () throws Exception {
         String publisher = "Bloomsbury Publishing";
         String genre="Fantasy";
         String year="1997";
-        Mockito.when(mockBookRepository.findByPublisherAndGenreAndYear("Bloomsbury Publishing"
-                ,"Fantasy", "1997"))
+        Mockito.when(mockBookRepository.findBooksWithOptionalFilters(
+                        "Fantasy",
+                        null,
+                        null,
+                        null,
+                        "Bloomsbury Publishing",
+                        "1997",
+                        null))
                 .thenReturn(books.stream().filter(book -> book.getPublisher().equals(publisher))
                         .filter(book -> book.getGenre().equals(genre))
                         .filter(book -> book.getYear().equals(year))
@@ -309,16 +287,29 @@ class BookControllerTest {
                         + "\"publisher\":\"Bloomsbury Publishing\",\"year\":\"1997\",\"pages\":226,"
                         + "\"isbn\":\"9780747532111\"}]"))
                 .andExpect(jsonPath("$",hasSize(2)));
-        Mockito.verify(mockBookRepository).findByPublisherAndGenreAndYear(publisher,genre,year);
+        Mockito.verify(mockBookRepository).findBooksWithOptionalFilters(
+                "Fantasy",
+                null,
+                null,
+                null,
+                "Bloomsbury Publishing",
+                "1997",
+                null);
     }
     @Test
-    @DisplayName("whenFindPublisherGennderYerarFilter_thenReturnExceptionNotFoundException")
-    void whenFindPublisherGennderYerarFilter_thenReturnExceptionNotFoundException () throws Exception {
+    @DisplayName("WhenFindBooksWhitParams_thenReturnExceptionNotFoundException")
+    void WhenFindBooksWhitParams_thenReturnExceptionNotFoundException () throws Exception {
         String publisher = "Bloomsbury";
         String genre="Fantasy Test";
         String year="1997";
-        Mockito.when(mockBookRepository.findByPublisherAndGenreAndYear("Bloomsbury Publishing"
-                        ,"Fantasy", "1997"))
+        Mockito.when(mockBookRepository.findBooksWithOptionalFilters(
+                        "Fantasy test",
+                        null,
+                        null,
+                        null,
+                        "Not publishing",
+                        "1997",
+                        null))
                 .thenReturn(books.stream().filter(book -> book.getPublisher().equals(publisher))
                         .filter(book -> book.getGenre().equals(genre))
                         .filter(book -> book.getYear().equals(year))
@@ -330,6 +321,13 @@ class BookControllerTest {
                         .param("year", year)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
-        Mockito.verify(mockBookRepository).findByPublisherAndGenreAndYear(publisher,genre,year);
+        Mockito.verify(mockBookRepository).findBooksWithOptionalFilters(
+                genre,
+                null,
+                null,
+                null,
+                publisher,
+                year,
+                null);
     }
 }
