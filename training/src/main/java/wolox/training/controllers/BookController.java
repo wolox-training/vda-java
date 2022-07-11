@@ -61,12 +61,11 @@ public class BookController {
             return books;
         }
     }
-
     /**
      *
      * This method returns a list with books filtered for name
      *
-     * @param title : title to search
+     * @param title :Book's Title to search
      * @return {@link List} of {@link Book} filtered for title
      * @throws BookNotFoundException: trows exception if the book was not found
      *
@@ -74,7 +73,7 @@ public class BookController {
     @GetMapping(params = "title")
     @ResponseStatus(HttpStatus.OK)
     public List<Book> findByTitle(@RequestParam String title) {
-        List<Book> books = bookRepository.findByTitle(bookTitle);
+        List<Book> books = bookRepository.findByTitle(title);
         if (books.isEmpty()){
             throw new BookNotFoundException();
         }else{
@@ -104,23 +103,23 @@ public class BookController {
         return bookRepository.save(book);
     }
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        bookRepository.findById(id)
-                .orElseThrow(()-> new BookNotFoundException("Book Id:"+id+" not found"));
-        bookRepository.deleteById(id);
-    }
-
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}",
+            produces = "application/json")
     @ResponseStatus(HttpStatus.OK)
-    public Book updateBook(@RequestBody Book book, @PathVariable Long id) {
+    public Book updateBook(@PathVariable Long id, @RequestBody Book book) {
         if (book.getId() != id) {
             throw new BookIdMismatchException("Book id: "+book.getId()+" don't match with Id:"+id);
         }
         bookRepository.findById(id)
                 .orElseThrow(() -> new BookNotFoundException("Book Id:" + id + " not found"));
         return bookRepository.save(book);
+    }
+    @DeleteMapping(path = "/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        bookRepository.findById(id)
+                .orElseThrow(()-> new BookNotFoundException("Book Id:"+id+" not found"));
+        bookRepository.deleteById(id);
     }
 
 }

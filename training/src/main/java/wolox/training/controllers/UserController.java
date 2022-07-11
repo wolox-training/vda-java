@@ -122,12 +122,12 @@ public class UserController {
             @ApiResponse(code = 400, message = "User not found"),
     })
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
             @ApiParam(value = "User Id to delete", required = true)
             @PathVariable Long id) {
         userRepository.findById(id)
-                .orElseThrow(()-> new UserIdMismatchException("User Id:"+id+" not found"));
+                .orElseThrow(()-> new UserNotFoundException("User Id:"+id+" not found"));
         userRepository.deleteById(id);
     }
 
@@ -136,7 +136,7 @@ public class UserController {
      * This method adds a book in user collections
      *
      * @param book :Object book to add
-     * @param userId: user id to update
+     * @param id: user id to update
      * @throws BookNotFoundException : throw this exception if book not found
      * @throws UserNotFoundException: throw this exception if User not found
      */
@@ -146,19 +146,20 @@ public class UserController {
             @ApiResponse(code = 400, message = "User not found"),
             @ApiResponse(code = 400, message = "Book not found"),
             })
-    @PostMapping(path = "/{userId}/books",
+    @PostMapping(path = "/{id}/books",
             consumes = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.OK)
-    public void addBookinUserCollection(
+    public User addBookinUserCollection(
             @ApiParam(value = "New Book Entity", required = true)
             @RequestBody Book book,
             @ApiParam(value = "User id to update", required = true)
-            @PathVariable Long userId){
+            @PathVariable Long id){
         Book finalBook = bookRepository.findById(book.getId())
                 .orElseThrow(()->new BookNotFoundException("Book Id:"+ book.getId()+" not found"));
-        userRepository.findById(userId)
-                .orElseThrow(()-> new UserNotFoundException("User Id:"+userId+" not found"))
-                .addBookToCollection(finalBook);
+        User user = userRepository.findById(id)
+                .orElseThrow(()-> new UserNotFoundException("User Id:"+id+" not found"));
+        user.addBookToCollection(finalBook);
+        return userRepository.save(user);
     }
 
     /**
@@ -166,7 +167,7 @@ public class UserController {
      * This Method removes a book of user collection
      *
      * @param book : book to remove
-     * @param userId : userId
+     * @param id : userId
      * @throws BookNotFoundException : throw this exception if book not found
      * @throws UserNotFoundException: throw this exception if User not found
      */
@@ -177,19 +178,22 @@ public class UserController {
             @ApiResponse(code = 400, message = "User not found"),
             @ApiResponse(code = 400, message = "Book not found"),
     })
-    @DeleteMapping(path = "/{userId}/books",
-            consumes = {MediaType.APPLICATION_JSON_VALUE})
+    @DeleteMapping(path = "/{id}/books",
+            consumes = {MediaType.APPLICATION_JSON_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE}
+    )
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeBookInUserCollection(
+    public User removeBookInUserCollection(
             @ApiParam(value = "New Book Entity", required = true)
             @RequestBody Book book,
             @ApiParam(value = "User id to update", required = true)
-            @PathVariable Long userId){
+            @PathVariable Long id){
 
         Book finalBook = bookRepository.findById(book.getId())
                 .orElseThrow(()->new BookNotFoundException("Book Id:"+ book.getId()+" not found"));
-        userRepository.findById(userId)
-                .orElseThrow(()-> new UserNotFoundException("User Id:"+userId+" not found"))
-                .removeBookToCollection(finalBook);
+        User user = userRepository.findById(id)
+                .orElseThrow(()-> new UserNotFoundException("User Id:"+id+" not found"));
+        user.removeBookToCollection(finalBook);
+        return userRepository.save(user);
     }
 }
