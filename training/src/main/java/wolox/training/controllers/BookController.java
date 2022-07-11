@@ -1,10 +1,13 @@
 package wolox.training.controllers;
 
+
 import io.swagger.annotations.Api;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,10 +19,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import springfox.documentation.swagger2.mappers.ModelSpecificationMapper;
+import wolox.training.dtos.BookDto;
 import wolox.training.exceptions.BookIdMismatchException;
 import wolox.training.exceptions.BookNotFoundException;
 import wolox.training.models.Book;
 import wolox.training.repositoies.BookRepository;
+import wolox.training.services.OpenLibraryService;
 
 @RestController
 @RequestMapping("/api/books")
@@ -28,6 +34,11 @@ public class BookController {
 
     @Autowired
     private BookRepository bookRepository;
+    @Autowired
+    private ModelSpecificationMapper modelMapper;
+
+    @Autowired
+    private OpenLibraryService openLibraryService;
 
     /**
      *
@@ -46,37 +57,35 @@ public class BookController {
 
     /**
      *
-     * This method returns all Book in repository
+     * This method returns all Book in repository whit optional params for : genre, author,
+     * title, subtitle, publisher, year, pages.
      *
-     * @return {@link List} with all instances of {@link Book}
+     * @return {@link List} with all instances of {@link Book} filters by params sent.
      * @throws BookNotFoundException :trows exception if the book was not found
      */
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<Book> findAll() {
-        List<Book> books = (List<Book>) bookRepository.findAll();
+    public List<Book> findBooksWithFilters(
+            @RequestParam (required = false) Optional<String> genre,
+            @RequestParam (required = false) Optional<String> author,
+            @RequestParam (required = false) Optional<String> title,
+            @RequestParam (required = false) Optional<String> subtitle,
+            @RequestParam (required = false) Optional<String> publisher,
+            @RequestParam (required = false) Optional<String> year,
+            @RequestParam (required = false) Optional<Integer> pages
+            ) {
+        List<Book> books = bookRepository.findBooksWithOptionalFilters(
+                genre.orElse(null),
+                author.orElse(null),
+                title.orElse(null),
+                subtitle.orElse(null),
+                publisher.orElse(null),
+                year.orElse(null),
+                pages.orElse(null)
+        );
         if(books.isEmpty()){
             throw new BookNotFoundException();
         }else {
-            return books;
-        }
-    }
-    /**
-     *
-     * This method returns a list with books filtered for name
-     *
-     * @param title :Book's Title to search
-     * @return {@link List} of {@link Book} filtered for title
-     * @throws BookNotFoundException: trows exception if the book was not found
-     *
-     */
-    @GetMapping(params = "title")
-    @ResponseStatus(HttpStatus.OK)
-    public List<Book> findByTitle(@RequestParam String title) {
-        List<Book> books = bookRepository.findByTitle(title);
-        if (books.isEmpty()){
-            throw new BookNotFoundException();
-        }else{
             return books;
         }
     }
@@ -120,6 +129,30 @@ public class BookController {
         bookRepository.findById(id)
                 .orElseThrow(()-> new BookNotFoundException("Book Id:"+id+" not found"));
         bookRepository.deleteById(id);
+    }
+    /**
+     *
+     * This method returns {@link  List<Book>} filtered for isbn
+     *
+     * @param isbn :Book's isbn to search
+     * @return {@link  Book} and it creates book on local database when the
+     * book is not found the local database but is in openlibrary.
+     * @throws BookNotFoundException : trows exception if the book was not found
+     *
+     */
+    @GetMapping(params = "isbn")
+    public ResponseEntity<Book> findByIsbn(@RequestParam String isbn) {
+        Book book = bookRepository.findByIsbn(isbn)
+                .orElse(null);
+        if(book == null){
+            try {
+                    BookDto bookDto = openLibraryService.bookInfo(isbn)
+                            .orElseThrow(()->new BookNotFoundException("Book isbn:"+isbn+"not found"));
+                    book = openLibraryService.saveBookDto(bookDto).orElseThrow(RuntimeException::new);
+                    return ResponseEntity.status(HttpStatus.CREATED).body(book);
+                } catch (Exception e) { throw new RuntimeException(e); }
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(book);
     }
 
 }

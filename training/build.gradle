@@ -25,6 +25,10 @@ dependencies {
     implementation 'io.springfox:springfox-swagger-ui:3.0.0'
     implementation 'io.springfox:springfox-swagger2:3.0.0'
     implementation 'com.google.guava:guava:31.1-jre'
+    implementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    implementation 'org.mockito:mockito-core:4.6.1'
+    implementation 'org.mockito:mockito-junit-jupiter:4.6.1'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.3'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
