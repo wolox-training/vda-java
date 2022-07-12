@@ -5,8 +5,12 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,6 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import wolox.training.exceptions.BookNotFoundException;
@@ -52,8 +57,8 @@ public class UserController {
     })
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<User> findAll() {
-        List<User> users = (List<User>) userRepository.findAll();
+    public Page<User> findAll(@PageableDefault(value = 3, page = 0) Pageable pageable) {
+        Page<User> users = userRepository.findAll(pageable);
         if(users.isEmpty()){
             throw new UserNotFoundException();
         }else {
@@ -149,7 +154,7 @@ public class UserController {
     @PostMapping(path = "/{id}/books",
             consumes = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.OK)
-    public User addBookinUserCollection(
+    public User addBookInUserCollection(
             @ApiParam(value = "New Book Entity", required = true)
             @RequestBody Book book,
             @ApiParam(value = "User id to update", required = true)
@@ -195,5 +200,24 @@ public class UserController {
                 .orElseThrow(()-> new UserNotFoundException("User Id:"+id+" not found"));
         user.removeBookToCollection(finalBook);
         return userRepository.save(user);
+    }
+
+    @GetMapping(params = {"start_date", "end_date","name"})
+    @ResponseStatus(HttpStatus.OK)
+    public Page<User> findByBirthdayAndName(@RequestParam String start_date,
+                                            @RequestParam String end_date,
+                                            @RequestParam String name,
+                                            @PageableDefault(value = 3, page = 0) Pageable pageable
+                                            ) {
+        name = name.isEmpty()?null:name;
+        LocalDate startDate = start_date.isEmpty()?LocalDate.parse("1000-01-01"):LocalDate.parse(start_date);
+        LocalDate endDate= end_date.isEmpty()?LocalDate.now():LocalDate.parse(end_date);
+        Page<User> users = userRepository
+                .findByBirthdateBetweenAndNameContainingIgnoreCase(startDate, endDate, name, pageable);
+        if(users.isEmpty()){
+            throw new UserNotFoundException();
+        }else {
+            return users;
+        }
     }
 }
