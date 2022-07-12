@@ -16,11 +16,16 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import wolox.training.models.Book;
@@ -38,10 +43,13 @@ class BookControllerTest {
 
     @MockBean
     private BookRepository mockBookRepository;
+    @Mock
+    private Page<Book> page;
     private Book oneTestBook;
     private List<Book> books;
 
     private ObjectMapper mapper;
+
     BookControllerTest() {
     }
 
@@ -68,70 +76,77 @@ class BookControllerTest {
         twoTestBook.setSubtitle("-");
         twoTestBook.setTitle("Harry Potter and the philosopher's Stone");
         twoTestBook.setYear("1997");
-        Book threTestBook = new Book();
-        threTestBook.setAuthor("J.K Rowling");
-        threTestBook.setGenre("Fantasy");
-        threTestBook.setImage("image-harry.png");
-        threTestBook.setIsbn("9780747532111");
-        threTestBook.setPages(226);
-        threTestBook.setPublisher("Bloomsbury Publishing");
-        threTestBook.setSubtitle("-");
-        threTestBook.setTitle("Harry Potter and the philosopher's Stone - test");
-        threTestBook.setYear("1997");
+        Book threeTestBook = new Book();
+        threeTestBook.setAuthor("J.K Rowling");
+        threeTestBook.setGenre("Fantasy");
+        threeTestBook.setImage("image-harry.png");
+        threeTestBook.setIsbn("9780747532111");
+        threeTestBook.setPages(226);
+        threeTestBook.setPublisher("Bloomsbury Publishing");
+        threeTestBook.setSubtitle("-");
+        threeTestBook.setTitle("Harry Potter and the philosopher's Stone - test");
+        threeTestBook.setYear("1997");
         books = new ArrayList<>();
         books.add(oneTestBook);
         books.add(twoTestBook);
-        books.add(threTestBook);
+        books.add(threeTestBook);
+        page = new PageImpl<>(books);
     }
 
     @Test
     @DisplayName("WhenFindAll_thenReturnListAllBooksWhitStatusOK")
-    void whenFindAll_thenReturnListAllBooksWhitStatusOK () throws Exception {
-        Mockito.when(mockBookRepository.findBooksWithOptionalFilters(null,null,null,null,
-                        null,null,null))
-                .thenReturn(books);
-        String url =("/api/books");
+    void whenFindAll_thenReturnListAllBooksWhitStatusOK() throws Exception {
+        Mockito.when(mockBookRepository.findBooksWithOptionalFilters(null, null, null, null,
+                        null, null, null, PageRequest.of(0, 3)))
+                .thenReturn(page);
+        String url = ("/api/books");
         mvc.perform(get(url)
-                    .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json("[{\"id\":0,\"genre\":\"Terror\","
-                        + "\"author\":\"Stephen King\",\"image\":\"image.jpeg\",\"title\":\"It\","
-                        + "\"subtitle\":\"Worst clown ever\",\"publisher\":\"Viking Publisher\","
-                        + "\"year\":\"1986\",\"pages\":1253,\"isbn\":\"4578-8665\"},{\"id\":0,"
-                        + "\"genre\":\"Fantasy\",\"author\":\"J.K Rowling\","
-                        + "\"image\":\"image-harry.png\",\"title\":\"Harry Potter and the philosopher's Stone\","
-                        + "\"subtitle\":\"-\",\"publisher\":\"Bloomsbury Publishing\","
-                        + "\"year\":\"1997\",\"pages\":226,\"isbn\":\"9780747532743\"},{\"id\":0,\"genre\":\"Fantasy\","
+                .andExpect(content().json("{\"content\""
+                        + ":[{\"id\":0,\"genre\":\"Terror\",\"author\":\"Stephen King\","
+                        + "\"image\":\"image.jpeg\",\"title\":\"It\",\"subtitle\":\"Worst clown ever\","
+                        + "\"publisher\":\"Viking Publisher\",\"year\":\"1986\",\"pages\":1253,"
+                        + "\"isbn\":\"4578-8665\"},{\"id\":0,\"genre\":\"Fantasy\","
                         + "\"author\":\"J.K Rowling\",\"image\":\"image-harry.png\","
-                        + "\"title\":\"Harry Potter and the philosopher's Stone - test\",\"subtitle\":\"-\","
+                        + "\"title\":\"Harry Potter and the philosopher's Stone\",\"subtitle\":\"-\","
                         + "\"publisher\":\"Bloomsbury Publishing\",\"year\":\"1997\",\"pages\":226,"
-                        + "\"isbn\":\"9780747532111\"}]"))
-                .andExpect(jsonPath("$",hasSize(3)));
-        Mockito.verify(mockBookRepository).findBooksWithOptionalFilters(null,null,null,null,
-                null,null,null);
+                        + "\"isbn\":\"9780747532743\"},{\"id\":0,\"genre\":\"Fantasy\","
+                        + "\"author\":\"J.K Rowling\",\"image\":\"image-harry.png\","
+                        + "\"title\":\"Harry Potter and the philosopher's Stone - test\","
+                        + "\"subtitle\":\"-\",\"publisher\":\"Bloomsbury Publishing\",\"year\":\"1997\","
+                        + "\"pages\":226,\"isbn\":\"9780747532111\"}],\"pageable\":\"INSTANCE\","
+                        + "\"last\":true,\"totalPages\":1,\"totalElements\":3,\"size\":3,\"number\":0,"
+                        + "\"sort\":{\"empty\":true,\"sorted\":false,\"unsorted\":true},\"first\":true,"
+                        + "\"numberOfElements\":3,\"empty\":false}"))
+                .andExpect(jsonPath("$.content", hasSize(3)));
+        Mockito.verify(mockBookRepository).findBooksWithOptionalFilters(null, null, null, null,
+                null, null, null, PageRequest.of(0, 3));
     }
+
     @Test
     @DisplayName("WhenFindAllInEmptyCollection_thenReturnExceptionNotFoundException")
-    void whenFindAllInEmptyCollection_thenReturnExceptionNotFoundException () throws Exception {
+    void whenFindAllInEmptyCollection_thenReturnExceptionNotFoundException() throws Exception {
         books.remove(0);
         books.remove(0);
         books.remove(0);
-        Mockito.when(mockBookRepository.findBooksWithOptionalFilters(null,null,null,null,
-                null,null,null)).thenReturn(books);
-        String url =("/api/books");
+        page = new PageImpl<>(books);
+        Mockito.when(mockBookRepository.findBooksWithOptionalFilters(null, null, null, null,
+                null, null, null, PageRequest.of(0, 3))).thenReturn(page);
+        String url = ("/api/books");
         mvc.perform(get(url)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
-        Mockito.verify(mockBookRepository).findBooksWithOptionalFilters(null,null,null,null,
-                null,null,null);
+        Mockito.verify(mockBookRepository).findBooksWithOptionalFilters(null, null, null, null,
+                null, null, null, PageRequest.of(0, 3));
     }
 
     @Test
     @DisplayName("WhenFindById_thenStatusOk")
     void whenFindById_thenReturnBookEntity() throws Exception {
         Mockito.when(mockBookRepository.findById(0L)).thenReturn(Optional.of(oneTestBook));
-        String url =("/api/books/0");
+        String url = ("/api/books/0");
         mvc.perform(get(url)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -154,9 +169,9 @@ class BookControllerTest {
     @DisplayName("WhenCreateBook_thenReturnBookEntityCreatedStatusCreated")
     void whenCreateBook_thenReturnBookEntityCreatedStatusCreated() throws Exception {
         Mockito.when(mockBookRepository.save(Mockito.any())).thenReturn(oneTestBook);
-        String url =("/api/books");
+        String url = ("/api/books");
         mvc.perform(post(url)
-                .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsBytes(oneTestBook)))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -178,7 +193,7 @@ class BookControllerTest {
     void whenUpdateBook_thenReturnBookEntityUpdateStatusOk() throws Exception {
         Mockito.when(mockBookRepository.findById(0L)).thenReturn(Optional.of(oneTestBook));
         Mockito.when(mockBookRepository.save(Mockito.any())).thenReturn(oneTestBook);
-        String url =("/api/books/0");
+        String url = ("/api/books/0");
         mvc.perform(put(url)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(oneTestBook)))
@@ -203,10 +218,10 @@ class BookControllerTest {
     void whenUpdateNotExistBook_thenNotFoundException() throws Exception {
         Mockito.when(mockBookRepository.findById(1L))
                 .thenReturn(books.stream()
-                        .filter(book -> book.getId()==1L)
+                        .filter(book -> book.getId() == 1L)
                         .findFirst());
         Mockito.when(mockBookRepository.save(Mockito.any())).thenReturn(oneTestBook);
-        String url =("/api/books/0");
+        String url = ("/api/books/0");
         mvc.perform(put(url)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(oneTestBook)))
@@ -219,20 +234,21 @@ class BookControllerTest {
     void whenUpdateMismatchBook_thenBadRequestException() throws Exception {
         Mockito.when(mockBookRepository.findById(0L))
                 .thenReturn(books.stream()
-                        .filter(book -> book.getId()==0L)
+                        .filter(book -> book.getId() == 0L)
                         .findFirst());
         Mockito.when(mockBookRepository.save(Mockito.any())).thenReturn(oneTestBook);
-        String url =("/api/books/1");
+        String url = ("/api/books/1");
         mvc.perform(put(url)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(oneTestBook)))
                 .andExpect(status().isBadRequest());
     }
+
     @Test
     @DisplayName("WhenDeleteBook_thenResponseNoContent")
-    void whenDeleteBook_thenResponseNoContent() throws Exception{
+    void whenDeleteBook_thenResponseNoContent() throws Exception {
         Mockito.when(mockBookRepository.findById(0L)).thenReturn(Optional.of(oneTestBook));
-        String url =("/api/books/0");
+        String url = ("/api/books/0");
         mvc.perform(delete(url)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(oneTestBook)))
@@ -243,9 +259,9 @@ class BookControllerTest {
 
     @Test
     @DisplayName("WhenDeleteNotExistBook_thenResponseNotFoundException")
-    void whenDeleteNotExistBook_thenResponseNotFoundException() throws Exception{
+    void whenDeleteNotExistBook_thenResponseNotFoundException() throws Exception {
         Mockito.when(mockBookRepository.findById(0L)).thenReturn(Optional.of(oneTestBook));
-        String url =("/api/books/1");
+        String url = ("/api/books/1");
         mvc.perform(delete(url)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(oneTestBook)))
@@ -254,10 +270,14 @@ class BookControllerTest {
 
     @Test
     @DisplayName("WhenFindByWhitParams_thenReturnFilterListBooksWhitStatusOK")
-    void whenFindByWhitParams_thenReturnFilterListBooksWhitStatusOK () throws Exception {
+    void whenFindByWhitParams_thenReturnFilterListBooksWhitStatusOK() throws Exception {
         String publisher = "Bloomsbury Publishing";
-        String genre="Fantasy";
-        String year="1997";
+        String genre = "Fantasy";
+        String year = "1997";
+        page = new PageImpl<>(books.stream().filter(book -> book.getPublisher().equals(publisher))
+                .filter(book -> book.getGenre().equals(genre))
+                .filter(book -> book.getYear().equals(year))
+                .collect(Collectors.toList()));
         Mockito.when(mockBookRepository.findBooksWithOptionalFilters(
                         "Fantasy",
                         null,
@@ -265,12 +285,10 @@ class BookControllerTest {
                         null,
                         "Bloomsbury Publishing",
                         "1997",
-                        null))
-                .thenReturn(books.stream().filter(book -> book.getPublisher().equals(publisher))
-                        .filter(book -> book.getGenre().equals(genre))
-                        .filter(book -> book.getYear().equals(year))
-                        .collect(Collectors.toList()));
-        String url =("/api/books");
+                        null,
+                        PageRequest.of(0, 3)))
+                .thenReturn(page);
+        String url = ("/api/books");
         mvc.perform(get(url)
                         .param("publisher", publisher)
                         .param("genre", genre)
@@ -278,15 +296,19 @@ class BookControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json("[{\"id\":0,\"genre\":\"Fantasy\",\"author\":\"J.K Rowling\","
-                        + "\"image\":\"image-harry.png\",\"title\":\"Harry Potter and the philosopher's Stone\","
-                        + "\"subtitle\":\"-\",\"publisher\":\"Bloomsbury Publishing\",\"year\":\"1997\","
-                        + "\"pages\":226,\"isbn\":\"9780747532743\"},{\"id\":0,\"genre\":\"Fantasy\","
+                .andExpect(content().json("{\"content\":[{\"id\":0,\"genre\":\"Fantasy\""
+                        + ",\"author\":\"J.K Rowling\",\"image\":\"image-harry.png\","
+                        + "\"title\":\"Harry Potter and the philosopher's Stone\",\"subtitle\":\"-\","
+                        + "\"publisher\":\"Bloomsbury Publishing\",\"year\":\"1997\",\"pages\":226,"
+                        + "\"isbn\":\"9780747532743\"},{\"id\":0,\"genre\":\"Fantasy\","
                         + "\"author\":\"J.K Rowling\",\"image\":\"image-harry.png\","
                         + "\"title\":\"Harry Potter and the philosopher's Stone - test\",\"subtitle\":\"-\","
-                        + "\"publisher\":\"Bloomsbury Publishing\",\"year\":\"1997\",\"pages\":226,"
-                        + "\"isbn\":\"9780747532111\"}]"))
-                .andExpect(jsonPath("$",hasSize(2)));
+                        + "\"publisher\":\"Bloomsbury Publishing\",\"year\":\"1997\","
+                        + "\"pages\":226,\"isbn\":\"9780747532111\"}],\"pageable\":\"INSTANCE\","
+                        + "\"totalPages\":1,\"last\":true,\"totalElements\":2,\"first\":true,"
+                        + "\"numberOfElements\":2,\"size\":2,\"number\":0,\"sort\":{\"sorted\":false,"
+                        + "\"unsorted\":true,\"empty\":true},\"empty\":false}"))
+                .andExpect(jsonPath("$.content", hasSize(2)));
         Mockito.verify(mockBookRepository).findBooksWithOptionalFilters(
                 "Fantasy",
                 null,
@@ -294,40 +316,27 @@ class BookControllerTest {
                 null,
                 "Bloomsbury Publishing",
                 "1997",
-                null);
+                null,
+                PageRequest.of(0, 3));
     }
     @Test
     @DisplayName("WhenFindBooksWhitParams_thenReturnExceptionNotFoundException")
     void WhenFindBooksWhitParams_thenReturnExceptionNotFoundException () throws Exception {
         String publisher = "Bloomsbury";
-        String genre="Fantasy Test";
-        String year="1997";
-        Mockito.when(mockBookRepository.findBooksWithOptionalFilters(
-                        "Fantasy test",
-                        null,
-                        null,
-                        null,
-                        "Not publishing",
-                        "1997",
-                        null))
-                .thenReturn(books.stream().filter(book -> book.getPublisher().equals(publisher))
-                        .filter(book -> book.getGenre().equals(genre))
-                        .filter(book -> book.getYear().equals(year))
-                        .collect(Collectors.toList()));
-        String url =("/api/books");
+        String genre = "Fantasy Test";
+        String year = "1997";
+        page = new PageImpl<>(books.stream().filter(book -> book.getPublisher().equals(publisher))
+                .filter(book -> book.getGenre().equals(genre))
+                .filter(book -> book.getYear().equals(year))
+                .collect(Collectors.toList()));
+        Mockito.when(mockBookRepository.findBooksWithOptionalFilters(null, null, null, null,
+                null, null, null, PageRequest.of(0, 3))).thenReturn(page);
+        String url = ("/api/books");
         mvc.perform(get(url)
-                        .param("publisher", publisher)
-                        .param("genre", genre)
-                        .param("year", year)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
-        Mockito.verify(mockBookRepository).findBooksWithOptionalFilters(
-                genre,
-                null,
-                null,
-                null,
-                publisher,
-                year,
-                null);
+        Mockito.verify(mockBookRepository).findBooksWithOptionalFilters(null, null, null, null,
+                null, null, null, PageRequest.of(0, 3));
+
     }
 }

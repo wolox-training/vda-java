@@ -5,6 +5,9 @@ import io.swagger.annotations.Api;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -65,23 +68,25 @@ public class BookController {
      */
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<Book> findBooksWithFilters(
+    public Page<Book> findAllWithFilters(
             @RequestParam (required = false) Optional<String> genre,
             @RequestParam (required = false) Optional<String> author,
             @RequestParam (required = false) Optional<String> title,
             @RequestParam (required = false) Optional<String> subtitle,
             @RequestParam (required = false) Optional<String> publisher,
             @RequestParam (required = false) Optional<String> year,
-            @RequestParam (required = false) Optional<Integer> pages
+            @RequestParam (required = false) Optional<Integer> pages,
+            @PageableDefault(value = 3, page = 0) Pageable pageable
             ) {
-        List<Book> books = bookRepository.findBooksWithOptionalFilters(
+        Page<Book> books = bookRepository.findBooksWithOptionalFilters(
                 genre.orElse(null),
                 author.orElse(null),
                 title.orElse(null),
                 subtitle.orElse(null),
                 publisher.orElse(null),
                 year.orElse(null),
-                pages.orElse(null)
+                pages.orElse(null),
+                pageable
         );
         if(books.isEmpty()){
             throw new BookNotFoundException();

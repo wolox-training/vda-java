@@ -15,18 +15,21 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import wolox.training.models.Book;
@@ -49,6 +52,9 @@ class UserControllerTest {
 
     @MockBean
     private BookRepository mockBookRepository;
+
+    @Mock
+    private Page<User> page;
 
     private User oneTestUser;
     private User twoTestUser;
@@ -100,6 +106,8 @@ class UserControllerTest {
         userTestList.add(oneTestUser);
         userTestList.add(twoTestUser);
         userTestList.add(threeTestUser);
+        page = new PageImpl<>(userTestList);
+
     }
 
 
@@ -107,13 +115,13 @@ class UserControllerTest {
     @Test
     @DisplayName("WhenFindAll_thenReturnListAllUserWhitStatusOK")
     void whenFindAll_thenReturnListAllUserWhitStatusOK() throws Exception {
-        Mockito.when(mockUserRepository.findAll()).thenReturn(userTestList);
+        Mockito.when(mockUserRepository.findAll(PageRequest.of(0, 3))).thenReturn(page);
         String url =("/api/users");
         mvc.perform(get(url)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json("[{\"id\":0,\"username\":\"rammeneces\","
+                .andExpect(content().json("{\"content\":[{\"id\":0,\"username\":\"rammeneces\","
                         + "\"name\":\"Ramiro Meneces\",\"birthdate\":[1980,6,25],\"books\":[]},"
                         + "{\"id\":0,\"username\":\"tangarces\",\"name\":\"Tania Garces\","
                         + "\"birthdate\":[1992,8,30],\"books\":[{\"id\":0,\"genre\":\"Terror\","
@@ -121,9 +129,12 @@ class UserControllerTest {
                         + "\"subtitle\":\"Worst clown ever\",\"publisher\":\"Viking Publisher\","
                         + "\"year\":\"1986\",\"pages\":1253,\"isbn\":\"4578-8665\"}]},{\"id\":0,"
                         + "\"username\":\"tanrivas\",\"name\":\"Tania Rivas\",\"birthdate\":[1993,8,30],"
-                        + "\"books\":[]}]"));
+                        + "\"books\":[]}],\"pageable\":\"INSTANCE\",\"last\":true,\"totalElements\":3,"
+                        + "\"totalPages\":1,\"size\":3,\"number\":0,\"sort\":{\"empty\":true,"
+                        + "\"sorted\":false,\"unsorted\":true},\"first\":true,\"numberOfElements\":3,"
+                        + "\"empty\":false}"));
 
-        Mockito.verify(mockUserRepository).findAll();
+        Mockito.verify(mockUserRepository).findAll(PageRequest.of(0, 3));
     }
 
     @Test
@@ -132,13 +143,14 @@ class UserControllerTest {
         userTestList.remove(0);
         userTestList.remove(0);
         userTestList.remove(0);
-        Mockito.when(mockUserRepository.findAll()).thenReturn(userTestList);
+        Mockito.when(mockUserRepository
+                .findAll(PageRequest.of(0, 3))).thenReturn(new PageImpl<>(userTestList));
         String url =("/api/users");
         mvc.perform(get(url)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
-        Mockito.verify(mockUserRepository).findAll();
+        Mockito.verify(mockUserRepository).findAll(PageRequest.of(0, 3));
     }
 
     @Test
@@ -362,11 +374,11 @@ class UserControllerTest {
         Mockito.when(mockUserRepository
                         .findByBirthdateBetweenAndNameContainingIgnoreCase(LocalDate.parse(startDate)
                                 ,LocalDate.parse(endDate)
-                                ,name))
-                .thenReturn(userTestList.stream().filter(user -> user.getName().contains(name))
+                                ,name, PageRequest.of(0, 3)))
+                .thenReturn(new PageImpl<>(userTestList.stream().filter(user -> user.getName().contains(name))
                         .filter(user -> user.getBirthdate().isAfter(LocalDate.parse(startDate)))
                         .filter(user -> user.getBirthdate().isBefore(LocalDate.parse(endDate)))
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList())));
         String url =("/api/users");
         mvc.perform(get(url)
                         .param("start_date", startDate)
@@ -375,17 +387,21 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json("[{\"id\":0,\"username\":\"tangarces\",\"name\":\"Tania Garces\","
-                        + "\"birthdate\":[1992,8,30],\"books\":[{\"id\":0,\"genre\":\"Terror\","
-                        + "\"author\":\"Stephen King\",\"image\":\"image.jpeg\",\"title\":\"It\","
-                        + "\"subtitle\":\"Worst clown ever\",\"publisher\":\"Viking Publisher\",\"year\":\"1986\","
-                        + "\"pages\":1253,\"isbn\":\"4578-8665\"}]},{\"id\":0,\"username\":\"tanrivas\","
-                        + "\"name\":\"Tania Rivas\",\"birthdate\":[1993,8,30],\"books\":[]}]"))
-                .andExpect(jsonPath("$",hasSize(2)));
+                .andExpect(content().json("{\"content\":[{\"id\":0,\"username\":\"tangarces\""
+                        + ",\"name\":\"Tania Garces\",\"birthdate\":[1992,8,30],\"books\":[{\"id\":0,"
+                        + "\"genre\":\"Terror\",\"author\":\"Stephen King\",\"image\":\"image.jpeg\","
+                        + "\"title\":\"It\",\"subtitle\":\"Worst clown ever\","
+                        + "\"publisher\":\"Viking Publisher\",\"year\":\"1986\",\"pages\":1253,"
+                        + "\"isbn\":\"4578-8665\"}]},{\"id\":0,\"username\":\"tanrivas\","
+                        + "\"name\":\"Tania Rivas\",\"birthdate\":[1993,8,30],\"books\":[]}],"
+                        + "\"pageable\":\"INSTANCE\",\"last\":true,\"totalElements\":2,\"totalPages\":1,"
+                        + "\"size\":2,\"number\":0,\"sort\":{\"empty\":true,\"sorted\":false,"
+                        + "\"unsorted\":true},\"numberOfElements\":2,\"first\":true,\"empty\":false}"))
+                .andExpect(jsonPath("$.content",hasSize(2)));
 
         Mockito.verify(mockUserRepository)
                 .findByBirthdateBetweenAndNameContainingIgnoreCase(LocalDate.parse(startDate)
-                        ,LocalDate.parse(endDate),name);
+                        ,LocalDate.parse(endDate),name, PageRequest.of(0, 3));
     }
 
     @Test
@@ -397,11 +413,12 @@ class UserControllerTest {
         Mockito.when(mockUserRepository
                         .findByBirthdateBetweenAndNameContainingIgnoreCase(LocalDate.parse(startDate)
                                 ,LocalDate.parse(endDate)
-                                ,name))
-                .thenReturn(userTestList.stream().filter(user -> user.getName().contains(name))
+                                ,name
+                                ,PageRequest.of(0, 3)))
+                .thenReturn(new PageImpl<>(userTestList.stream().filter(user -> user.getName().contains(name))
                         .filter(user -> user.getBirthdate().isAfter(LocalDate.parse(startDate)))
                         .filter(user -> user.getBirthdate().isBefore(LocalDate.parse(endDate)))
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList())));
         String url =("/api/users");
         mvc.perform(get(url)
                         .param("start_date", startDate)
@@ -412,6 +429,6 @@ class UserControllerTest {
 
         Mockito.verify(mockUserRepository)
                 .findByBirthdateBetweenAndNameContainingIgnoreCase(LocalDate.parse(startDate)
-                        ,LocalDate.parse(endDate),name);
+                        ,LocalDate.parse(endDate),name,PageRequest.of(0, 3));
     }
 }

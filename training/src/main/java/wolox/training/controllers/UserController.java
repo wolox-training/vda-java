@@ -8,6 +8,9 @@ import io.swagger.annotations.ApiResponses;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -54,8 +57,8 @@ public class UserController {
     })
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<User> findAll() {
-        List<User> users = (List<User>) userRepository.findAll();
+    public Page<User> findAll(@PageableDefault(value = 3, page = 0) Pageable pageable) {
+        Page<User> users = userRepository.findAll(pageable);
         if(users.isEmpty()){
             throw new UserNotFoundException();
         }else {
@@ -201,14 +204,16 @@ public class UserController {
 
     @GetMapping(params = {"start_date", "end_date","name"})
     @ResponseStatus(HttpStatus.OK)
-    public List<User> findByBirthdayAndName(@RequestParam String start_date,
+    public Page<User> findByBirthdayAndName(@RequestParam String start_date,
                                             @RequestParam String end_date,
-                                            @RequestParam String name) {
+                                            @RequestParam String name,
+                                            @PageableDefault(value = 3, page = 0) Pageable pageable
+                                            ) {
         name = name.isEmpty()?null:name;
         LocalDate startDate = start_date.isEmpty()?LocalDate.parse("1000-01-01"):LocalDate.parse(start_date);
         LocalDate endDate= end_date.isEmpty()?LocalDate.now():LocalDate.parse(end_date);
-        List<User> users = userRepository
-                .findByBirthdateBetweenAndNameContainingIgnoreCase(startDate, endDate, name);
+        Page<User> users = userRepository
+                .findByBirthdateBetweenAndNameContainingIgnoreCase(startDate, endDate, name, pageable);
         if(users.isEmpty()){
             throw new UserNotFoundException();
         }else {
